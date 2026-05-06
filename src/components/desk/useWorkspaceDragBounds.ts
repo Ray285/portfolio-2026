@@ -13,8 +13,8 @@ export type DeskPlaneBounds = {
 };
 
 export const DESK_BOUNDS_FALLBACK: DeskPlaneBounds = {
-  x: [-15, 15],
-  z: [-10, 10],
+  x: [-12, 12],
+  z: [-9, 9],
 };
 
 /**
@@ -85,9 +85,10 @@ export function computeVisibleDeskBounds(
  * World XZ bounds on the y=0 plane that match the visible orthographic
  * frustum (full canvas), minus `margin` so objects do not sit half off-screen.
  *
- * Note: `useMemo` depends on the `camera` reference and `size`, not on every
- * pan/zoom change. For draggables this can lag until a re-render; the desk
- * ball uses {@link computeVisibleDeskBounds} each frame instead.
+ * Note: `useMemo` depends on the `camera` reference and `size`, not on
+ * orthographic `position` / `zoom`. For drag bounds that must follow the
+ * frustum on every move, call {@link computeVisibleDeskBounds} (see
+ * `DraggableObject` and `DeskBall`).
  */
 export function useWorkspaceDragBounds(margin = 1.1) {
   const { camera, size } = useThree();

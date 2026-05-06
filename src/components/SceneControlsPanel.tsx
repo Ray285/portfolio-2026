@@ -1,10 +1,33 @@
 "use client";
 
-import { Fragment, useCallback, useMemo, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import { useDeskControls } from "@/context/DeskControlsContext";
 import type { DeskControls } from "@/context/DeskControlsContext";
 import { useDeskLayout } from "@/context/DeskLayoutContext";
-import { DESK_LAYOUT_STORAGE_KEY } from "@/lib/desk-layout";
+import { useDeskSceneId } from "@/context/DeskSceneContext";
+import { CAMERA_Y_MAX } from "@/lib/desk-camera-y-bounds";
+import {
+  CAMERA_PAN_X_MAX,
+  CAMERA_PAN_X_MIN,
+  CAMERA_PAN_Z_MAX,
+  CAMERA_PAN_Z_MIN,
+} from "@/lib/desk-scene-defaults";
+import {
+  clampDeskItemBaseY,
+  clampDeskItemLayoutScale,
+  DESK_ITEM_BASE_Y_MAX,
+  DESK_ITEM_BASE_Y_MIN,
+  DESK_ITEM_BASE_Y_STEP,
+  DESK_ITEM_LAYOUT_SCALE_MAX,
+  DESK_ITEM_LAYOUT_SCALE_MIN,
+  getDeskLayoutStorageKey,
+} from "@/lib/desk-layout";
+
+const ARRANGE_ITEM_FALLBACK = {
+  position: [0, 0.08, 0] as [number, number, number],
+  rotation: [0, 0, 0] as [number, number, number],
+  scale: 1,
+};
 
 type SliderConfig = {
   key: keyof DeskControls;
@@ -25,8 +48,8 @@ const SECTIONS: { title: string; items: SliderConfig[] }[] = [
         description:
           "Moves the view left or right in world space. " +
           "The camera still looks straight down, so this pans the frame horizontally on screen.",
-        min: -4,
-        max: 4,
+        min: CAMERA_PAN_X_MIN,
+        max: CAMERA_PAN_X_MAX,
         step: 0.05,
       },
       {
@@ -36,7 +59,7 @@ const SECTIONS: { title: string; items: SliderConfig[] }[] = [
           "World height of the camera above the table. " +
           "For an ortho camera, moving only along the view line does not change the image, so this is paired with a zoom factor (relative to the default in desk-scene-defaults) so higher Y shows more of the scene and lower Y crops tighter.",
         min: 4,
-        max: 16,
+        max: CAMERA_Y_MAX,
         step: 0.05,
       },
       {
@@ -45,8 +68,8 @@ const SECTIONS: { title: string; items: SliderConfig[] }[] = [
         description:
           "Pans the view forward and back on the table. " +
           "Use with X to re-center the subject without changing the tilt of the camera.",
-        min: -4,
-        max: 4,
+        min: CAMERA_PAN_Z_MIN,
+        max: CAMERA_PAN_Z_MAX,
         step: 0.05,
       },
       {
@@ -261,14 +284,27 @@ function formatValue(key: keyof DeskControls, v: number): string {
 }
 
 export function SceneControlsPanel() {
-  const { controls, set, reset } = useDeskControls();
+  const scene = useDeskSceneId();
+  const layoutStorageKey = getDeskLayoutStorageKey(scene);
+  const {
+    controls,
+    set,
+    reset,
+    arrangeMode,
+    setArrangeMode,
+    selectedLayoutId,
+    selectedLayoutIds,
+  } = useDeskControls();
   const {
     exportJson,
     importJson,
     clear: clearSavedLayout,
+    getItem,
+    recordItem,
   } = useDeskLayout();
   const [layoutPaste, setLayoutPaste] = useState("");
   const [layoutHint, setLayoutHint] = useState<string | null>(null);
+  const [open, setOpen] = useState(false);
 
   const copyLayout = useCallback(async () => {
     const s = exportJson();
@@ -290,25 +326,217 @@ export function SceneControlsPanel() {
     }
   }, [importJson, layoutPaste]);
 
+  /** Arrange mode: `[` / `]` step baseline Y (stack order) for the selected item. */
+  useEffect(() => {
+    if (!arrangeMode || selectedLayoutId == null) {
+      return;
+    }
+    const layoutId = selectedLayoutId;
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key !== "[" && e.key !== "]") {
+        return;
+      }
+      const t = e.target;
+      if (
+        t instanceof HTMLInputElement ||
+        t instanceof HTMLTextAreaElement ||
+        (t instanceof HTMLElement && t.isContentEditable)
+      ) {
+        return;
+      }
+      e.preventDefault();
+      const cur = getItem(layoutId, ARRANGE_ITEM_FALLBACK);
+      const delta =
+        e.key === "]" ? DESK_ITEM_BASE_Y_STEP : -DESK_ITEM_BASE_Y_STEP;
+      const nextY = clampDeskItemBaseY(cur.position[1] + delta);
+      recordItem(layoutId, {
+        ...cur,
+        position: [cur.position[0], nextY, cur.position[2]],
+      });
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [arrangeMode, selectedLayoutId, getItem, recordItem]);
+
   const keys = useMemo(
     () => new Set(SECTIONS.flatMap((s) => s.items.map((i) => i.key))),
     [],
   );
 
   return (
-    <div className="pointer-events-auto fixed right-0 top-0 z-50 max-h-dvh w-[min(22rem,92vw)] overflow-y-auto border-b border-l border-zinc-200/80 bg-white/95 p-3 shadow-lg backdrop-blur-sm sm:rounded-bl-lg sm:border-t-0 sm:border-l">
-      <div className="mb-2 flex items-center justify-between gap-2">
+    <div className="pointer-events-auto fixed right-0 top-0 z-50 w-[min(22rem,92vw)] border-b border-l border-zinc-200/80 bg-white/95 shadow-lg backdrop-blur-sm sm:rounded-bl-lg sm:border-t-0 sm:border-l">
+      <div className="flex items-center justify-between gap-2 p-3 touch-manipulation">
         <h2 className="text-xs font-semibold tracking-wide text-zinc-800">
           Scene
         </h2>
-        <button
-          type="button"
-          onClick={reset}
-          className="rounded border border-zinc-300 bg-white px-2 py-0.5 text-[10px] text-zinc-600 hover:border-zinc-500 hover:text-zinc-900"
-        >
-          Reset
-        </button>
+        <div className="flex items-center gap-1.5">
+          {open && (
+            <button
+              type="button"
+              onClick={reset}
+              className="rounded border border-zinc-300 bg-white px-2 py-0.5 text-[10px] text-zinc-600 hover:border-zinc-500 hover:text-zinc-900"
+            >
+              Reset
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => setOpen((v) => !v)}
+            aria-label={open ? "Collapse panel" : "Expand panel"}
+            className="rounded border border-zinc-300 bg-white px-2 py-0.5 text-[10px] text-zinc-600 hover:border-zinc-500 hover:text-zinc-900"
+          >
+            {open ? "▲" : "▼"}
+          </button>
+        </div>
       </div>
+      {open && <div className="max-h-[calc(100dvh-3rem)] overflow-y-auto border-t border-zinc-200/80 p-3 pt-2">
+      <div className="mb-3 rounded border border-amber-200/90 bg-amber-50/80 p-2">
+        <label className="flex cursor-pointer items-start gap-2">
+          <input
+            type="checkbox"
+            className="mt-0.5"
+            checked={arrangeMode}
+            onChange={(e) => setArrangeMode(e.target.checked)}
+          />
+          <span>
+            <span className="text-[10px] font-medium text-amber-950">
+              Arrange desk
+            </span>
+            <span className="mt-0.5 block text-[8px] leading-relaxed text-amber-900/80">
+              Click a prop to select (ring appears), drag the body to move on the
+              table, drag the ring to rotate. With a selection: wheel / trackpad
+              scales; use the controls below for lift (Y, stack order) and
+              precise size. Buttons or [ / ] nudge lift by a small step. While
+              arrange is on, single-clicks do not open links. Press Escape to
+              clear selection.
+            </span>
+          </span>
+        </label>
+      </div>
+      {arrangeMode && selectedLayoutId ? (
+        <div className="mb-3 rounded border border-zinc-200 bg-zinc-50/90 p-2">
+          {selectedLayoutIds.length > 1 ? (
+            <p className="mb-2 rounded bg-zinc-100/90 px-1.5 py-1 text-[9px] leading-snug text-zinc-600">
+              {selectedLayoutIds.length} items selected. Sliders edit the
+              primary only ({selectedLayoutId}). Dragging on canvas moves every
+              selected item together (Shift-click to toggle).
+            </p>
+          ) : null}
+          <div className="mb-1 flex items-baseline justify-between gap-1">
+            <span className="text-[10px] font-medium text-zinc-700">
+              Lift — stack order (baseline Y)
+            </span>
+            <span className="shrink-0 text-[9px] tabular-nums text-zinc-500">
+              {clampDeskItemBaseY(
+                getItem(selectedLayoutId, ARRANGE_ITEM_FALLBACK).position[1],
+              ).toFixed(4)}
+            </span>
+          </div>
+          <div className="mb-1 flex gap-1">
+            <button
+              type="button"
+              className="min-w-8 rounded border border-zinc-300 bg-white px-2 py-0.5 text-[11px] font-medium text-zinc-700 hover:border-zinc-500"
+              aria-label="Decrease lift"
+              onClick={() => {
+                const cur = getItem(selectedLayoutId, ARRANGE_ITEM_FALLBACK);
+                const nextY = clampDeskItemBaseY(
+                  cur.position[1] - DESK_ITEM_BASE_Y_STEP,
+                );
+                recordItem(selectedLayoutId, {
+                  ...cur,
+                  position: [cur.position[0], nextY, cur.position[2]],
+                });
+              }}
+            >
+              −
+            </button>
+            <button
+              type="button"
+              className="min-w-8 rounded border border-zinc-300 bg-white px-2 py-0.5 text-[11px] font-medium text-zinc-700 hover:border-zinc-500"
+              aria-label="Increase lift"
+              onClick={() => {
+                const cur = getItem(selectedLayoutId, ARRANGE_ITEM_FALLBACK);
+                const nextY = clampDeskItemBaseY(
+                  cur.position[1] + DESK_ITEM_BASE_Y_STEP,
+                );
+                recordItem(selectedLayoutId, {
+                  ...cur,
+                  position: [cur.position[0], nextY, cur.position[2]],
+                });
+              }}
+            >
+              +
+            </button>
+          </div>
+          <input
+            aria-label="Selected item baseline height above desk for stacking"
+            className="h-1 w-full cursor-pointer appearance-none rounded bg-zinc-200 accent-zinc-800"
+            type="range"
+            min={DESK_ITEM_BASE_Y_MIN}
+            max={DESK_ITEM_BASE_Y_MAX}
+            step={DESK_ITEM_BASE_Y_STEP}
+            value={clampDeskItemBaseY(
+              getItem(selectedLayoutId, ARRANGE_ITEM_FALLBACK).position[1],
+            )}
+            onChange={(e) => {
+              const nextY = clampDeskItemBaseY(Number(e.target.value));
+              const cur = getItem(selectedLayoutId, ARRANGE_ITEM_FALLBACK);
+              recordItem(selectedLayoutId, {
+                ...cur,
+                position: [cur.position[0], nextY, cur.position[2]],
+              });
+            }}
+          />
+          <p className="mt-1 text-[8px] leading-relaxed text-zinc-500">
+            Higher values draw in front when props overlap (top-down camera).
+            Drag on the desk still moves X / Z only. Keyboard{" "}
+            <kbd className="rounded bg-zinc-100 px-0.5 font-mono text-[8px]">
+              [
+            </kbd>{" "}
+            /{" "}
+            <kbd className="rounded bg-zinc-100 px-0.5 font-mono text-[8px]">
+              ]
+            </kbd>{" "}
+            nudge by {DESK_ITEM_BASE_Y_STEP} world units.
+          </p>
+
+          <div className="mt-3 border-t border-zinc-200/90 pt-3">
+            <div className="mb-1 flex items-baseline justify-between gap-1">
+              <span className="text-[10px] font-medium text-zinc-700">
+                Selected item scale
+              </span>
+              <span className="shrink-0 text-[9px] tabular-nums text-zinc-500">
+                {clampDeskItemLayoutScale(
+                  getItem(selectedLayoutId, ARRANGE_ITEM_FALLBACK).scale ?? 1,
+                ).toFixed(2)}
+              </span>
+            </div>
+            <input
+              aria-label="Selected draggable layout scale"
+              className="h-1 w-full cursor-pointer appearance-none rounded bg-zinc-200 accent-zinc-800"
+              type="range"
+              min={DESK_ITEM_LAYOUT_SCALE_MIN}
+              max={DESK_ITEM_LAYOUT_SCALE_MAX}
+              step={0.02}
+              value={clampDeskItemLayoutScale(
+                getItem(selectedLayoutId, ARRANGE_ITEM_FALLBACK).scale ?? 1,
+              )}
+              onChange={(e) => {
+                const v = clampDeskItemLayoutScale(Number(e.target.value));
+                const cur = getItem(selectedLayoutId, ARRANGE_ITEM_FALLBACK);
+                recordItem(selectedLayoutId, { ...cur, scale: v });
+              }}
+            />
+            <p className="mt-1 text-[8px] leading-relaxed text-zinc-500">
+              Applies to{" "}
+              <code className="rounded bg-zinc-100 px-0.5">
+                {selectedLayoutId}
+              </code>
+              . Matches wheel scaling on the canvas while arrange mode is on.
+            </p>
+          </div>
+        </div>
+      ) : null}
       <p className="mb-2 text-[9px] leading-relaxed text-zinc-500">
         Camera and light defaults live in{" "}
         <code className="rounded bg-zinc-100 px-0.5">desk-scene-defaults.ts</code>{" "}
@@ -375,11 +603,15 @@ export function SceneControlsPanel() {
         Desk layout (draggables)
       </h3>
       <p className="mb-2 text-[8px] leading-relaxed text-zinc-500">
-        Positions and rotations are saved to{" "}
+        Positions, rotations, and per-item layout scale are saved to{" "}
         <code className="rounded bg-zinc-100 px-0.5">localStorage</code> as JSON
-        under <code className="rounded bg-zinc-100 px-0.5">{DESK_LAYOUT_STORAGE_KEY}</code>{" "}
-        when you <strong>finish dragging</strong> a card, photo, or prop, and when
-        the ball <strong>stops</strong> (or you release a soft nudge). Copy the file
+        under{" "}
+        <code className="rounded bg-zinc-100 px-0.5">{layoutStorageKey}</code>{" "}
+        (per route: <code className="rounded bg-zinc-100 px-0.5">…:about</code> for{" "}
+        <code className="rounded bg-zinc-100 px-0.5">/about</code>){" "}
+        when you <strong>finish dragging</strong> a card, photo, or prop,{" "}
+        <strong>change scale</strong> (wheel or slider), and when the ball{" "}
+        <strong>stops</strong> (or you release a soft nudge). Copy the file
         for backups or to share; paste and apply to load.
       </p>
       <div className="mb-2 flex flex-wrap gap-1.5">
@@ -407,7 +639,9 @@ export function SceneControlsPanel() {
           type="button"
           onClick={() => {
             clearSavedLayout();
-            setLayoutHint("Cleared saved layout. Scene uses code defaults until you move things again.");
+            setLayoutHint(
+              "Cleared browser save. The desk resets to the default layout in src/data/desk-layout.json until you move things again.",
+            );
           }}
           className="rounded border border-amber-200 bg-amber-50/80 px-2 py-0.5 text-[10px] text-amber-900 hover:border-amber-400"
         >
@@ -436,6 +670,7 @@ export function SceneControlsPanel() {
           <span className="text-[8px] text-zinc-600">{layoutHint}</span>
         ) : null}
       </div>
+      </div>}
     </div>
   );
 }

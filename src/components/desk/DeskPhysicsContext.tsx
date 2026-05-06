@@ -23,6 +23,11 @@ export type DeskPhysicsEntry = {
   /** When true (e.g. a rolling ball), this entry pushes nearby items even though
    *  it is not being directly dragged. */
   pushWhileMoving?: boolean;
+  /**
+   * When false, the desk ball does not collide with this entry or push it — handwriting labels,
+   * loop videos, etc. Default effective behavior when omitted: participate (`true`).
+   */
+  participatesInBallPhysics?: boolean;
 };
 
 type DeskPhysicsContextValue = {

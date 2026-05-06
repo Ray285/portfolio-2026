@@ -17,6 +17,9 @@ export function DeskSurface() {
         metalness={0}
         envMapIntensity={0}
         toneMapped={false}
+        polygonOffset
+        polygonOffsetFactor={1}
+        polygonOffsetUnits={1}
       />
     </mesh>
   );

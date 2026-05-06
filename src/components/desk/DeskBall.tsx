@@ -2,16 +2,17 @@
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import { useFrame, useThree, type ThreeEvent } from "@react-three/fiber";
-import { useTexture } from "@react-three/drei";
-import { Mesh, OrthographicCamera, Plane, Quaternion, SRGBColorSpace, Vector3, type Texture } from "three";
+import { Mesh, OrthographicCamera, Plane, Quaternion, SRGBColorSpace, TextureLoader, Vector3, type Texture } from "three";
 import { useDeskPhysics, type DeskPhysicsEntry } from "./DeskPhysicsContext";
 import {
   computeVisibleDeskBounds,
   DESK_BOUNDS_FALLBACK,
 } from "./useWorkspaceDragBounds";
+import { capturedPointers } from "@/lib/touch-capture-registry";
+import { DESK_BALL_DEFAULT_RADIUS, DESK_BALL_ENTRY_ID } from "@/lib/desk-ball-constants";
 
 /** Web-friendly matcap: use PNG or JPEG. Browsers + Three.js `useTexture` do not load TIFF reliably. */
-const DEFAULT_MATCAP_URL = "/desk/GrainBW_MatCap.png";
+const DEFAULT_MATCAP_URL = "/desk/7877EE_D87FC5_75D9C7_1C78C0.png";
 
 function configureMatcapTexture(texture: Texture) {
   texture.colorSpace = SRGBColorSpace;
@@ -24,34 +25,32 @@ type DeskBallProps = {
   radius?: number;
   /** Tint multiplied with the matcap (sRGB hex). */
   color?: string;
-  /** URL path (under `public/`) to a matcap image; loaded via `useTexture` (parent should wrap in `Suspense`). */
+  /** URL path (under `public/`) to a matcap image. */
   matcapUrl?: string;
   /** Extra world units to inset the bounce rect beyond `radius` from the visible frustum edge (`0` = sphere tangent to the screen-edge workspace in XZ). */
   edgePadding?: number;
   /** Fires each frame with world X, Z (for persisting the ball in layout JSON together with other items). */
   onWorldXZFrame?: (xz: [number, number]) => void;
-  /** Fires when the ball should be written as “at rest” (soft throw end or rolling stop). */
+  /** Fires when the ball should be written as "at rest" (soft throw end or rolling stop). */
   onCommitWorldXZ?: (xz: [number, number]) => void;
 };
 
 /** Friction coefficient applied to linear velocity each second (exp decay). */
-const LINEAR_DRAG = 0.95;
+const LINEAR_DRAG = 0.992;
 /** Energy preserved when bouncing off a viewport edge. */
-const EDGE_RESTITUTION = 0.72;
+const EDGE_RESTITUTION = 0.85;
 /** Energy preserved when bouncing off another desk object. */
 const OBJECT_RESTITUTION = 0.45;
 /** Below this speed the ball stops drifting and snaps to rest. */
 const MIN_SPEED = 0.05;
-/** Above this speed the ball is treated as a “moving pusher” for nearby cards. */
+/** Above this speed the ball is treated as a "moving pusher" for nearby cards. */
 const PUSH_VELOCITY_THRESHOLD = 0.6;
 /** Hard ceiling on throw velocity so a flick can not launch the ball off-screen. */
 const MAX_THROW_SPEED = 22;
 /** How many ms of recent pointer samples we keep for computing release velocity. */
 const SAMPLE_WINDOW_MS = 90;
-/** How long the ball must stay under `MIN_SPEED` before we treat it as “resting” and commit layout. */
+/** How long the ball must stay under `MIN_SPEED` before we treat it as "resting" and commit layout. */
 const REST_LAYOUT_COMMIT_DELAY_S = 0.38;
-const DESK_BALL_ENTRY_ID = "ball";
-
 const dragPlane = new Plane(new Vector3(0, 1, 0), 0);
 const scratchQuat = new Quaternion();
 
@@ -63,7 +62,7 @@ function clampNumber(value: number, min: number, max: number) {
 
 export function DeskBall({
   initialPosition = [4.4, 1.6],
-  radius = 0.45,
+  radius = DESK_BALL_DEFAULT_RADIUS,
   color = "#e0524a",
   matcapUrl = DEFAULT_MATCAP_URL,
   edgePadding = 0,
@@ -73,11 +72,28 @@ export function DeskBall({
   const [ix, iz] = initialPosition;
   const { camera, size } = useThree();
   const deskPhysics = useDeskPhysics();
-  const meshRef = useRef<Mesh>(null);
-  const matcap = useTexture(matcapUrl);
-  useLayoutEffect(() => {
-    configureMatcapTexture(matcap);
-  }, [matcap]);
+
+  /** Load matcap without suspending. useTexture/useLoader from drei/R3F both throw a thenable
+   *  which silently drops the component when there is no Suspense boundary to catch it.
+   *  Using Three.js's native TextureLoader loads asynchronously — the mesh always renders,
+   *  and the texture applies when loaded. */
+  const matcapRef = useRef<Texture | null>(null);
+  useEffect(() => {
+    const loader = new TextureLoader();
+    loader.load(
+      matcapUrl,
+      (tex) => {
+        configureMatcapTexture(tex);
+        matcapRef.current = tex;
+      },
+      undefined,
+      () => {
+        // On error, fall through with no matcap (mesh will use the color tint only)
+        matcapRef.current = null;
+      },
+    );
+  }, [matcapUrl]);
+
   const margin = radius + edgePadding;
   const getWorkspaceBounds = useCallback(() => {
     if (!(camera instanceof OrthographicCamera)) {
@@ -87,10 +103,12 @@ export function DeskBall({
     return computeVisibleDeskBounds(camera, size.width, size.height, margin);
   }, [camera, size.width, size.height, margin]);
 
+  const meshRef = useRef<Mesh>(null);
   const positionRef = useRef(new Vector3(ix, radius, iz));
   const previousPositionRef = useRef(new Vector3(ix, radius, iz));
   const velocityRef = useRef(new Vector3());
   const quatRef = useRef(new Quaternion());
+  const rotationAxisRef = useRef(new Vector3());
   const draggingRef = useRef(false);
   const hoveredRef = useRef(false);
   const dragOffsetRef = useRef(new Vector3());
@@ -147,6 +165,7 @@ export function DeskBall({
     }
     const target = event.target as Element | null;
     target?.setPointerCapture(event.pointerId);
+    capturedPointers.add(event.pointerId);
     draggingRef.current = true;
     velocityRef.current.set(0, 0, 0);
     dragOffsetRef.current.set(
@@ -179,6 +198,8 @@ export function DeskBall({
       bounds.z[0],
       bounds.z[1],
     );
+
+    /* Drive the ball to the clamped target. */
     positionRef.current.set(nextX, radius, nextZ);
     recordSample(point);
   }
@@ -187,6 +208,7 @@ export function DeskBall({
     event.stopPropagation();
     const target = event.target as Element | null;
     target?.releasePointerCapture(event.pointerId);
+    capturedPointers.delete(event.pointerId);
     draggingRef.current = false;
 
     const samples = samplesRef.current;
@@ -208,6 +230,7 @@ export function DeskBall({
     }
     samplesRef.current = [];
     document.body.style.cursor = hoveredRef.current ? "grab" : "auto";
+
     const sp = Math.hypot(velocityRef.current.x, velocityRef.current.z);
     if (onCommitWorldXZ && sp < 0.2) {
       onCommitWorldXZ([positionRef.current.x, positionRef.current.z]);
@@ -218,142 +241,98 @@ export function DeskBall({
     }
   }
 
-  useFrame((_, delta) => {
+  /** Manual physics loop — no Rapier. */
+  useFrame((_state, delta) => {
+    if (draggingRef.current) {
+      /* While dragging, just sync the entry and mesh. */
+      const entry = entryRef.current;
+      entry.position.copy(positionRef.current);
+      entry.velocity.set(0, 0, 0);
+      entry.isDragging = true;
+      entry.isHovered = hoveredRef.current;
+      entry.pushWhileMoving = false;
+      onWorldXZFrame?.([positionRef.current.x, positionRef.current.z]);
+      if (meshRef.current) {
+        meshRef.current.position.copy(positionRef.current);
+      }
+      return;
+    }
+
+    /* Apply linear drag (frame-rate independent). */
+    velocityRef.current.multiplyScalar(Math.pow(LINEAR_DRAG, delta * 60));
+
+    /* Check if ball has stopped. */
+    const speed = Math.hypot(velocityRef.current.x, velocityRef.current.z);
+    if (speed < MIN_SPEED) {
+      velocityRef.current.set(0, 0, 0);
+    }
+
+    /* Integrate position. */
+    positionRef.current.x += velocityRef.current.x * delta;
+    positionRef.current.z += velocityRef.current.z * delta;
+
+    /* Bounce off viewport edges. */
     const bounds = getWorkspaceBounds();
-    const dt = Math.min(delta, 0.05);
-    const pos = positionRef.current;
-    const prev = previousPositionRef.current;
     const vel = velocityRef.current;
 
-    if (!draggingRef.current) {
-      pos.x += vel.x * dt;
-      pos.z += vel.z * dt;
-
-      const decay = Math.exp(-LINEAR_DRAG * dt);
-      vel.x *= decay;
-      vel.z *= decay;
-
-      const [xMin, xMax] = bounds.x;
-      const [zMin, zMax] = bounds.z;
-      if (pos.x < xMin) {
-        pos.x = xMin;
-        if (vel.x < 0) vel.x = -vel.x * EDGE_RESTITUTION;
-      } else if (pos.x > xMax) {
-        pos.x = xMax;
-        if (vel.x > 0) vel.x = -vel.x * EDGE_RESTITUTION;
-      }
-      if (pos.z < zMin) {
-        pos.z = zMin;
-        if (vel.z < 0) vel.z = -vel.z * EDGE_RESTITUTION;
-      } else if (pos.z > zMax) {
-        pos.z = zMax;
-        if (vel.z > 0) vel.z = -vel.z * EDGE_RESTITUTION;
-      }
-
-      if (deskPhysics) {
-        for (const other of deskPhysics.entriesRef.current.values()) {
-          if (other.id === entryRef.current.id) {
-            continue;
-          }
-          const dx = pos.x - other.position.x;
-          const dz = pos.z - other.position.z;
-          const dist = Math.hypot(dx, dz);
-          const minDist = radius + Math.max(other.radius * 0.85, 0.2);
-          if (dist >= minDist || dist < 1e-4) {
-            continue;
-          }
-          const nx = dx / dist;
-          const nz = dz / dist;
-          const overlap = minDist - dist;
-          pos.x += nx * overlap * 0.5;
-          pos.z += nz * overlap * 0.5;
-          const vn = vel.x * nx + vel.z * nz;
-          if (vn < 0) {
-            const k = (1 + OBJECT_RESTITUTION) * vn;
-            vel.x -= k * nx;
-            vel.z -= k * nz;
-          }
-        }
-      }
-
-      if (Math.hypot(vel.x, vel.z) < MIN_SPEED) {
-        vel.x = 0;
-        vel.z = 0;
-      }
-
-      if (onCommitWorldXZ) {
-        const speed = Math.hypot(vel.x, vel.z);
-        if (speed > MIN_SPEED * 1.2) {
-          restBelowSpeedTRef.current = 0;
-        } else {
-          restBelowSpeedTRef.current += dt;
-        }
-        if (
-          !restCommittedRef.current &&
-          restBelowSpeedTRef.current >= REST_LAYOUT_COMMIT_DELAY_S &&
-          speed < MIN_SPEED * 1.5
-        ) {
-          onCommitWorldXZ([pos.x, pos.z]);
-          restCommittedRef.current = true;
-        }
-      }
+    if (positionRef.current.x <= bounds.x[0]) {
+      positionRef.current.x = bounds.x[0];
+      vel.x = Math.abs(vel.x) * EDGE_RESTITUTION;
+    } else if (positionRef.current.x >= bounds.x[1]) {
+      positionRef.current.x = bounds.x[1];
+      vel.x = -Math.abs(vel.x) * EDGE_RESTITUTION;
     }
 
-    /** Frame-rate-independent safety clamp so a viewport resize never traps the
-     *  ball off-screen. */
-    pos.x = clampNumber(pos.x, bounds.x[0], bounds.x[1]);
-    pos.z = clampNumber(pos.z, bounds.z[0], bounds.z[1]);
-    pos.y = radius;
-
-    /** Roll based on the actual XZ delta this frame (works while dragged or
-     *  while integrating). For a sphere of radius R rolling without slip,
-     *  ω = (1/R) · (Y × Δp), so the rotation axis is perpendicular to motion
-     *  in the XZ plane and the angle is Δdistance / R. */
-    const fdx = pos.x - prev.x;
-    const fdz = pos.z - prev.z;
-    const fdist = Math.hypot(fdx, fdz);
-    if (fdist > 1e-5) {
-      const axisX = fdz;
-      const axisZ = -fdx;
-      const axisLen = Math.hypot(axisX, axisZ);
-      if (axisLen > 1e-6) {
-        const angle = fdist / radius;
-        const half = angle * 0.5;
-        const sin = Math.sin(half);
-        const cos = Math.cos(half);
-        scratchQuat.set(
-          (axisX / axisLen) * sin,
-          0,
-          (axisZ / axisLen) * sin,
-          cos,
-        );
-        quatRef.current.premultiply(scratchQuat).normalize();
-      }
-    }
-    prev.copy(pos);
-
-    const mesh = meshRef.current;
-    if (mesh) {
-      mesh.position.copy(pos);
-      mesh.quaternion.copy(quatRef.current);
+    if (positionRef.current.z <= bounds.z[0]) {
+      positionRef.current.z = bounds.z[0];
+      vel.z = Math.abs(vel.z) * EDGE_RESTITUTION;
+    } else if (positionRef.current.z >= bounds.z[1]) {
+      positionRef.current.z = bounds.z[1];
+      vel.z = -Math.abs(vel.z) * EDGE_RESTITUTION;
     }
 
+    /* Roll the ball: incrementally compose this frame's delta rotation onto the existing quat. */
+    if (speed > 0.001) {
+      rotationAxisRef.current.set(-vel.z, 0, vel.x).normalize();
+      scratchQuat.setFromAxisAngle(rotationAxisRef.current, (speed * delta) / radius);
+      quatRef.current.premultiply(scratchQuat).normalize();
+    }
+
+    /* Update entry for DeskPhysicsContext. */
     const entry = entryRef.current;
-    entry.position.copy(pos);
-    entry.velocity.copy(vel);
+    entry.position.copy(positionRef.current);
+    entry.velocity.copy(velocityRef.current);
     entry.radius = radius;
     entry.pushRadius = radius * 1.2;
-    entry.isDragging = draggingRef.current;
+    entry.isDragging = false;
     entry.isHovered = hoveredRef.current;
-    entry.pushWhileMoving =
-      !draggingRef.current && Math.hypot(vel.x, vel.z) > PUSH_VELOCITY_THRESHOLD;
+    entry.pushWhileMoving = speed > PUSH_VELOCITY_THRESHOLD;
 
-    onWorldXZFrame?.([pos.x, pos.z]);
+    onWorldXZFrame?.([positionRef.current.x, positionRef.current.z]);
+
+    /* Commit to layout when resting. */
+    if (speed < MIN_SPEED && restCommittedRef.current === false) {
+      restBelowSpeedTRef.current += delta;
+      if (restBelowSpeedTRef.current >= REST_LAYOUT_COMMIT_DELAY_S) {
+        onCommitWorldXZ?.([positionRef.current.x, positionRef.current.z]);
+        restCommittedRef.current = true;
+      }
+    } else if (speed >= MIN_SPEED) {
+      restBelowSpeedTRef.current = 0;
+      restCommittedRef.current = false;
+    }
+
+    /* Push updated transform to the mesh. */
+    if (meshRef.current) {
+      meshRef.current.position.copy(positionRef.current);
+      meshRef.current.quaternion.copy(quatRef.current);
+    }
   });
 
   return (
     <mesh
       ref={meshRef}
+      position={[ix, radius, iz]}
       castShadow
       receiveShadow
       onPointerDown={handlePointerDown}
@@ -376,11 +355,16 @@ export function DeskBall({
     >
       <icosahedronGeometry args={[radius, 4]} />
       {/*
-        MatCap (material capture) bakes lighting into a sphere map; the look does
-        not follow scene key/fill lights like MeshStandardMaterial. Contact
-        shadows under the mesh still read as a grounding cue.
+        meshMatcapMaterial renders invisibly when matcap is undefined (async load).
+        Use meshStandardMaterial with the matcap as a map so the ball is always
+        visible, then swap to the proper matcap look once the texture loads.
       */}
-      <meshMatcapMaterial matcap={matcap} color={color} />
+      <meshStandardMaterial
+        map={matcapRef.current}
+        color={color}
+        roughness={0.35}
+        metalness={0.1}
+      />
     </mesh>
   );
 }

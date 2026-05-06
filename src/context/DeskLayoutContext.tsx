@@ -5,27 +5,51 @@ import {
   useCallback,
   useContext,
   useEffect,
-  useLayoutEffect,
   useMemo,
   useRef,
   useState,
   type ReactNode,
 } from "react";
+import { useDeskSceneId } from "@/context/DeskSceneContext";
+import { getBundledDataForScene } from "@/lib/desk-default-layout";
 import {
   buildDeskLayoutFileV1,
-  DESK_LAYOUT_STORAGE_KEY,
+  clampDeskItemLayoutScale,
   formatDeskLayoutJson,
-  readDeskLayoutFromStorage,
+  getDeskLayoutStorageKey,
+  hasDeskLayoutInStorageForKey,
+  mergeDeskItemLayout,
+  readDeskLayoutFromStorageKey,
   tryParseDeskLayoutJson,
-  writeDeskLayoutToStorage,
+  writeDeskLayoutToStorageKey,
   type DeskItemLayout,
 } from "@/lib/desk-layout";
+import type { DeskSceneId } from "@/lib/desk-scene-id";
 
-const DEFAULT_BALL: [number, number] = [4.4, 1.6];
+function getInitialLayoutPack(scene: DeskSceneId): {
+  state: LayoutState;
+  ballTrack: [number, number];
+} {
+  const key = getDeskLayoutStorageKey(scene);
+  const b = getBundledDataForScene(scene);
+  if (!hasDeskLayoutInStorageForKey(key)) {
+    const ball: [number, number] = [b.ball[0], b.ball[1]] as [number, number];
+    return {
+      state: { items: { ...b.items }, ball, loaded: true },
+      ballTrack: ball,
+    };
+  }
+  const { items, ball: ballRaw } = readDeskLayoutFromStorageKey(key);
+  const ball: [number, number] =
+    ballRaw != null
+      ? [ballRaw[0], ballRaw[1]] as [number, number]
+      : [b.ball[0], b.ball[1]] as [number, number];
+  return { state: { items, ball, loaded: true }, ballTrack: ball };
+}
 
 type LayoutState = {
   items: Record<string, DeskItemLayout>;
-  /** null: no saved point yet (use `DEFAULT_BALL` for the ball’s spawn). */
+  /** null: no saved point yet (use bundled ball for the scene’s spawn). */
   ball: [number, number] | null;
   loaded: boolean;
 };
@@ -34,10 +58,13 @@ type DeskLayoutContextValue = {
   /** True after the first `localStorage` read (client only). */
   loaded: boolean;
   getItem: (id: string, fallback: DeskItemLayout) => DeskItemLayout;
-  getBallXZ: (fallback: [number, number]) => [number, number];
-  /** Free-rolling: update the ref (no localStorage write) so a later item-save includes the current ball. */
+  getBallXZ: () => [number, number];
   sampleBallXZ: (xz: [number, number]) => void;
   recordItem: (id: string, data: DeskItemLayout) => void;
+  /** Single localStorage persist for grouped arrange moves */
+  recordItems: (updates: Record<string, DeskItemLayout>) => void;
+  /** Arrange mode + wheel / UI: bump uniform layout scale for `id` (merged with bundled fallback). */
+  nudgeItemScale: (id: string, deltaY: number) => void;
   recordBall: (xz: [number, number]) => void;
   exportJson: () => string;
   importJson: (json: string) => { ok: true } | { ok: false; error: string };
@@ -47,76 +74,124 @@ type DeskLayoutContextValue = {
 const DeskLayoutContext = createContext<DeskLayoutContextValue | null>(null);
 
 export function DeskLayoutProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<LayoutState>({
-    items: {},
-    ball: null,
-    loaded: false,
-  });
+  const scene = useDeskSceneId();
+  const initPack = useMemo(() => getInitialLayoutPack(scene), [scene]);
+  const [state, setState] = useState<LayoutState>(() => initPack.state);
+  const ballTrackRef = useRef<[number, number]>(initPack.ballTrack);
+
+  const storageKey = getDeskLayoutStorageKey(scene);
+  const bundled = getBundledDataForScene(scene);
+  const bundledItems = bundled.items;
+  const bundledBall = bundled.ball;
 
   const itemsRef = useRef(state.items);
   useEffect(() => {
     itemsRef.current = state.items;
   }, [state.items]);
 
-  const ballTrackRef = useRef<[number, number]>(DEFAULT_BALL);
-
-  useLayoutEffect(() => {
-    const { items, ball } = readDeskLayoutFromStorage();
-    if (ball) {
-      ballTrackRef.current = [ball[0], ball[1]];
-    } else {
-      ballTrackRef.current = DEFAULT_BALL;
-    }
-    queueMicrotask(() => {
-      setState((prev) => ({ ...prev, items, ball, loaded: true }));
-    });
-  }, []);
-
   const getItem = useCallback(
     (id: string, fallback: DeskItemLayout): DeskItemLayout => {
-      const s = state.items[id];
-      return s ? { position: s.position, rotation: s.rotation } : fallback;
+      const stored = state.items[id] ?? bundledItems[id];
+      return mergeDeskItemLayout(fallback, stored);
     },
-    [state.items],
+    [state.items, bundledItems],
   );
 
-  const getBallXZ = useCallback(
-    (fallback: [number, number]) => {
-      if (state.ball) {
-        return [state.ball[0], state.ball[1]] as [number, number];
+  const nudgeItemScale = useCallback(
+    (id: string, deltaY: number) => {
+      const fb = bundledItems[id];
+      if (fb == null) {
+        return;
       }
-      return fallback;
+      setState((prev) => {
+        const merged = mergeDeskItemLayout(fb, prev.items[id]);
+        const factor = Math.exp(-deltaY * 0.002);
+        const nextScale = clampDeskItemLayoutScale(
+          (merged.scale ?? 1) * factor,
+        );
+        const nextItem: DeskItemLayout = {
+          position: merged.position,
+          rotation: merged.rotation,
+          scale: nextScale,
+        };
+        const nextItems = { ...prev.items, [id]: nextItem };
+        writeDeskLayoutToStorageKey(
+          storageKey,
+          buildDeskLayoutFileV1(nextItems, ballTrackRef.current),
+        );
+        return { ...prev, items: nextItems };
+      });
     },
-    [state.ball],
+    [bundledItems, storageKey],
   );
+
+  const getBallXZ = useCallback((): [number, number] => {
+    if (state.ball != null) {
+      return [state.ball[0], state.ball[1]] as [number, number];
+    }
+    return [bundledBall[0], bundledBall[1]] as [number, number];
+  }, [state.ball, bundledBall]);
 
   const sampleBallXZ = useCallback((xz: [number, number]) => {
     ballTrackRef.current = [xz[0], xz[1]];
   }, []);
 
-  const recordItem = useCallback((id: string, data: DeskItemLayout) => {
-    setState((prev) => {
-      const nextItems = { ...prev.items, [id]: data };
-      writeDeskLayoutToStorage(
-        buildDeskLayoutFileV1(nextItems, ballTrackRef.current),
-      );
-      return { ...prev, items: nextItems };
-    });
-  }, []);
+  const recordItem = useCallback(
+    (id: string, data: DeskItemLayout) => {
+      setState((prev) => {
+        const nextItems = { ...prev.items, [id]: data };
+        writeDeskLayoutToStorageKey(
+          storageKey,
+          buildDeskLayoutFileV1(nextItems, ballTrackRef.current),
+        );
+        return { ...prev, items: nextItems };
+      });
+    },
+    [storageKey],
+  );
 
-  const recordBall = useCallback((xz: [number, number]) => {
-    ballTrackRef.current = [xz[0], xz[1]];
-    setState((prev) => {
-      const next: LayoutState = {
-        ...prev,
-        ball: [xz[0], xz[1]],
-      };
-      writeDeskLayoutToStorage(
-        buildDeskLayoutFileV1({ ...next.items }, [xz[0], xz[1]]),
-      );
-      return next;
-    });
-  }, []);
+  const recordItems = useCallback(
+    (updates: Record<string, DeskItemLayout>) => {
+      const keys = Object.keys(updates);
+      if (keys.length === 0) {
+        return;
+      }
+      setState((prev) => {
+        let nextItems = prev.items;
+        for (let i = 0; i < keys.length; i++) {
+          const k = keys[i];
+          nextItems = { ...nextItems, [k]: updates[k] } as Record<
+            string,
+            DeskItemLayout
+          >;
+        }
+        writeDeskLayoutToStorageKey(
+          storageKey,
+          buildDeskLayoutFileV1(nextItems, ballTrackRef.current),
+        );
+        return { ...prev, items: nextItems };
+      });
+    },
+    [storageKey],
+  );
+
+  const recordBall = useCallback(
+    (xz: [number, number]) => {
+      ballTrackRef.current = [xz[0], xz[1]];
+      setState((prev) => {
+        const next: LayoutState = {
+          ...prev,
+          ball: [xz[0], xz[1]] as [number, number],
+        };
+        writeDeskLayoutToStorageKey(
+          storageKey,
+          buildDeskLayoutFileV1({ ...next.items }, [xz[0], xz[1]]),
+        );
+        return next;
+      });
+    },
+    [storageKey],
+  );
 
   const exportJson = useCallback((): string => {
     return formatDeskLayoutJson(
@@ -124,42 +199,50 @@ export function DeskLayoutProvider({ children }: { children: ReactNode }) {
     );
   }, []);
 
-  const importJson = useCallback((json: string) => {
-    const p = tryParseDeskLayoutJson(json);
-    if (!p.ok) {
-      return p;
-    }
-    const b =
-      p.value.ball != null ? p.value.ball : (DEFAULT_BALL as [number, number]);
-    ballTrackRef.current = [b[0], b[1]];
-    setState((prev) => {
-      const next: LayoutState = {
-        ...prev,
-        items: { ...p.value.items },
-        ball: p.value.ball ?? null,
-        loaded: true,
-      };
-      writeDeskLayoutToStorage(buildDeskLayoutFileV1({ ...next.items }, b));
-      return next;
-    });
-    return { ok: true } as const;
-  }, []);
+  const importJson = useCallback(
+    (json: string) => {
+      const p = tryParseDeskLayoutJson(json);
+      if (!p.ok) {
+        return p;
+      }
+      const b =
+        p.value.ball != null ? p.value.ball : bundledBall;
+      ballTrackRef.current = [b[0], b[1]];
+      setState((prev) => {
+        const next: LayoutState = {
+          ...prev,
+          items: { ...p.value.items },
+          ball: p.value.ball != null
+            ? [p.value.ball[0], p.value.ball[1]] as [number, number]
+            : null,
+          loaded: true,
+        };
+        writeDeskLayoutToStorageKey(
+          storageKey,
+          buildDeskLayoutFileV1({ ...next.items }, b),
+        );
+        return next;
+      });
+      return { ok: true } as const;
+    },
+    [bundledBall, storageKey],
+  );
 
   const clear = useCallback(() => {
-    ballTrackRef.current = DEFAULT_BALL;
+    ballTrackRef.current = [bundledBall[0], bundledBall[1]];
     if (typeof window !== "undefined" && window.localStorage) {
       try {
-        window.localStorage.removeItem(DESK_LAYOUT_STORAGE_KEY);
+        window.localStorage.removeItem(storageKey);
       } catch {
         // ignore
       }
     }
     setState((prev) => ({
       ...prev,
-      items: {},
-      ball: null,
+      items: { ...bundledItems },
+      ball: [bundledBall[0], bundledBall[1]] as [number, number],
     }));
-  }, []);
+  }, [storageKey, bundledItems, bundledBall]);
 
   const value = useMemo<DeskLayoutContextValue>(
     () => ({
@@ -168,6 +251,8 @@ export function DeskLayoutProvider({ children }: { children: ReactNode }) {
       getBallXZ,
       sampleBallXZ,
       recordItem,
+      recordItems,
+      nudgeItemScale,
       recordBall,
       exportJson,
       importJson,
@@ -179,6 +264,8 @@ export function DeskLayoutProvider({ children }: { children: ReactNode }) {
       getBallXZ,
       sampleBallXZ,
       recordItem,
+      recordItems,
+      nudgeItemScale,
       recordBall,
       exportJson,
       importJson,

@@ -4,10 +4,16 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
+import { useDeskSceneId } from "@/context/DeskSceneContext";
+import { getZoomOutIntroStartCameraForInitialControls } from "@/lib/desk-intro-bundled-start-camera";
+import { DESK_SCENE_HOME, type DeskSceneId } from "@/lib/desk-scene-id";
+import { clampCameraY } from "@/lib/desk-camera-y-bounds";
 import {
   DEFAULT_CAMERA,
   DEFAULT_FILL_LIGHT,
@@ -52,7 +58,7 @@ const defaultControls: DeskControls = {
   exposure: 0.95,
   contactOpacity: 0.15,
   contactBlur: 2.4,
-  contactScale: 28,
+  contactScale: 44,
   shadowRadius: 8,
   polaroidPrintScale: 0.98,
   cameraX: DEFAULT_CAMERA.x,
@@ -67,31 +73,243 @@ const defaultControls: DeskControls = {
   fillLightZ: DEFAULT_FILL_LIGHT.z,
 };
 
+function createInitialControlsState(scene: DeskSceneId): DeskControls {
+  const start = getZoomOutIntroStartCameraForInitialControls(scene);
+  if (start == null) {
+    return { ...defaultControls };
+  }
+  return {
+    ...defaultControls,
+    cameraX: start.x,
+    cameraY: clampCameraY(start.y),
+    cameraZ: start.z,
+    cameraZoom: start.zoom,
+  };
+}
+
 type Ctx = {
   controls: DeskControls;
   set: <K extends keyof DeskControls>(key: K, value: DeskControls[K]) => void;
+  /** Single state update (avoids split camera props for one frame during GSAP). */
+  setCamera: (c: { x: number; y: number; z: number; zoom: number }) => void;
   reset: () => void;
+  /** Scene panel: when true, select items, drag body to move, drag ring to yaw-rotate. */
+  arrangeMode: boolean;
+  setArrangeMode: (value: boolean) => void;
+  /**
+   * Last-interacted arrange selection (panels, wheel scaling). Mirrors first id when only one selected.
+   * @deprecated Prefer `primarySelectionId` + `selectedLayoutIds`.
+   */
+  selectedLayoutId: string | null;
+  /** @deprecated Prefer `primarySelectionId` + `toggleLayoutInArrangeSelection`. */
+  setSelectedLayoutId: (id: string | null) => void;
+
+  selectedLayoutIds: readonly string[];
+  /** Last clicked arrange item — controls panel edits & rotate ring anchor. */
+  primarySelectionId: string | null;
+  selectExclusiveLayout: (layoutId: string) => void;
+  toggleLayoutInArrangeSelection: (layoutId: string) => void;
+  clearArrangeSelection: () => void;
+  /** Replace selection (e.g. marquee); primary defaults to first id. */
+  setArrangeSelection: (
+    ids: readonly string[],
+    primaryId?: string | null,
+  ) => void;
+  /** Union with current selection (e.g. Shift+marquee). */
+  addArrangeSelection: (
+    extraIds: readonly string[],
+    primaryPreferred?: string | null,
+  ) => void;
 };
 
 const DeskControlsContext = createContext<Ctx | null>(null);
 
 export function DeskControlsProvider({ children }: { children: ReactNode }) {
-  const [controls, setControls] = useState<DeskControls>(defaultControls);
+  const scene = useDeskSceneId();
+  const [controls, setControls] = useState<DeskControls>(() =>
+    createInitialControlsState(scene),
+  );
+  const [arrangeMode, setArrangeModeState] = useState(false);
+  const [selectionIds, setSelectionIds] = useState<string[]>([]);
+  const [primarySelectionId, setPrimarySelectionId] = useState<string | null>(
+    null,
+  );
+  const selectionIdsRef = useRef(selectionIds);
+
+  useEffect(() => {
+    selectionIdsRef.current = selectionIds;
+  }, [selectionIds]);
+
+  const selectedLayoutIds = selectionIds;
+
+  /** Back-compat: singleton API → multi-select internals */
+  const setSelectedLayoutId = useCallback((id: string | null) => {
+    if (id == null) {
+      setSelectionIds([]);
+      setPrimarySelectionId(null);
+      return;
+    }
+    setSelectionIds([id]);
+    setPrimarySelectionId(id);
+  }, []);
+
+  const selectedLayoutId = primarySelectionId;
+
+  const clearArrangeSelection = useCallback(() => {
+    setSelectionIds([]);
+    setPrimarySelectionId(null);
+  }, []);
+
+  const setArrangeSelection = useCallback(
+    (
+      ids: readonly string[],
+      primaryId?: string | null,
+    ) => {
+      const next = [...new Set(ids)];
+      setSelectionIds(next);
+      if (next.length === 0) {
+        setPrimarySelectionId(null);
+        return;
+      }
+      const prim =
+        primaryId != null && next.includes(primaryId)
+          ? primaryId
+          : next[0] ?? null;
+      setPrimarySelectionId(prim);
+    },
+    [],
+  );
+
+  const addArrangeSelection = useCallback(
+    (extraIds: readonly string[], primaryPreferred?: string | null) => {
+      const merged = [...new Set([...selectionIdsRef.current, ...extraIds])];
+      setSelectionIds(merged);
+      if (merged.length === 0) {
+        setPrimarySelectionId(null);
+        return;
+      }
+      if (
+        primaryPreferred != null &&
+        merged.includes(primaryPreferred)
+      ) {
+        setPrimarySelectionId(primaryPreferred);
+      } else if (extraIds.length > 0) {
+        const last = extraIds[extraIds.length - 1];
+        if (last !== undefined && merged.includes(last)) {
+          setPrimarySelectionId(last);
+        }
+      }
+    },
+    [],
+  );
+
+  const selectExclusiveLayout = useCallback((layoutId: string) => {
+    setSelectionIds([layoutId]);
+    setPrimarySelectionId(layoutId);
+  }, []);
+
+  const toggleLayoutInArrangeSelection = useCallback((layoutId: string) => {
+    setSelectionIds((prev) => {
+      const idx = prev.indexOf(layoutId);
+      if (idx >= 0) {
+        const next = prev.filter((x) => x !== layoutId);
+        setPrimarySelectionId(
+          next.length === 0 ? null : next[next.length - 1] ?? null,
+        );
+        return next;
+      }
+      const next = [...prev, layoutId];
+      setPrimarySelectionId(layoutId);
+      return next;
+    });
+  }, []);
+
+  const setArrangeMode = useCallback((value: boolean) => {
+    setArrangeModeState(value);
+    if (!value) {
+      setSelectionIds([]);
+      setPrimarySelectionId(null);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!arrangeMode) {
+      return;
+    }
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        clearArrangeSelection();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [arrangeMode, clearArrangeSelection]);
 
   const set = useCallback(
     <K extends keyof DeskControls>(key: K, value: DeskControls[K]) => {
+      if (key === "cameraY" && typeof value === "number") {
+        setControls((prev) => ({ ...prev, cameraY: clampCameraY(value) }));
+        return;
+      }
       setControls((prev) => ({ ...prev, [key]: value }));
     },
     [],
   );
 
+  const setCamera = useCallback(
+    (c: { x: number; y: number; z: number; zoom: number }) => {
+      setControls((prev) => ({
+        ...prev,
+        cameraX: c.x,
+        cameraY: clampCameraY(c.y),
+        cameraZ: c.z,
+        cameraZoom: c.zoom,
+      }));
+    },
+    [],
+  );
+
   const reset = useCallback(() => {
-    setControls({ ...defaultControls });
-  }, []);
+    setControls(createInitialControlsState(scene));
+  }, [scene]);
 
   const value = useMemo(
-    () => ({ controls, set, reset }),
-    [controls, set, reset],
+    () => ({
+      controls,
+      set,
+      setCamera,
+      reset,
+      arrangeMode,
+      setArrangeMode,
+      selectedLayoutId,
+      setSelectedLayoutId,
+      selectedLayoutIds,
+      primarySelectionId,
+      selectExclusiveLayout,
+      toggleLayoutInArrangeSelection,
+      clearArrangeSelection,
+      setArrangeSelection,
+      addArrangeSelection,
+    }),
+    [
+      controls,
+      set,
+      setCamera,
+      reset,
+      arrangeMode,
+      setArrangeMode,
+      selectedLayoutId,
+      selectedLayoutIds,
+      primarySelectionId,
+      selectExclusiveLayout,
+      toggleLayoutInArrangeSelection,
+      clearArrangeSelection,
+      setArrangeSelection,
+      addArrangeSelection,
+      setSelectedLayoutId,
+    ],
   );
 
   return (
@@ -110,5 +328,5 @@ export function useDeskControls() {
 }
 
 export function getDefaultDeskControls(): DeskControls {
-  return { ...defaultControls };
+  return createInitialControlsState(DESK_SCENE_HOME);
 }
