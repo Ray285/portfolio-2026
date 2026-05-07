@@ -67,9 +67,16 @@ export function AboutDeskLoopVideo({ src, maxHeight }: AboutDeskLoopVideoProps) 
       }
     }
 
+    // Workaround: VP9 alpha WebM ignores the `loop` attribute in Chrome because
+    // the browser fails to seek the alpha bitstream back to the start.
+    function handleEnded() {
+      void video.play().catch(() => {});
+    }
+
     video.addEventListener("loadedmetadata", onLoadedMetadata);
     video.addEventListener("loadeddata", markRenderableIfPossible);
     video.addEventListener("canplay", markRenderableIfPossible);
+    video.addEventListener("ended", handleEnded);
 
     const tex = new THREE.VideoTexture(video);
     configureAboutDeskVideoTexture(tex);
@@ -84,6 +91,7 @@ export function AboutDeskLoopVideo({ src, maxHeight }: AboutDeskLoopVideoProps) 
       video.removeEventListener("loadedmetadata", onLoadedMetadata);
       video.removeEventListener("loadeddata", markRenderableIfPossible);
       video.removeEventListener("canplay", markRenderableIfPossible);
+      video.removeEventListener("ended", handleEnded);
       video.pause();
       video.removeAttribute("src");
       video.load();
