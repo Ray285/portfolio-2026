@@ -2,16 +2,16 @@
 
 import { useEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
-import { NormalBlending, PlaneGeometry, ShaderMaterial, type Mesh } from "three";
+import { NormalBlending, PlaneGeometry, ShaderMaterial, Vector2, type Mesh } from "three";
 
-/** Master opacity — keep subtle; tree shadows should be barely noticeable. */
-const MAX_ALPHA      = 0.1;
-/** Drift speed through noise space (wind movement). Lower = slower. */
-const TIME_SCALE     = 1.7;
-/** Zoom level of the shadow pattern. Higher = tighter, more detail. */
-const SHADOW_SCALE   = 29.0;
-/** Secondary layer weight (fine leaf dappling vs thick branch shadows). */
-const SECONDARY_ALPHA = 10;
+/** Max opacity of shadow bands between light rays. */
+const MAX_ALPHA  = 0.38;
+/** How fast rays slowly rotate. Very low = majestic drift. */
+const TIME_SCALE = 0.28;
+/** Controls how many rays are visible. ~7–12 looks natural. */
+const RAY_COUNT  = 9.0;
+/** How quickly rays fade with distance from source. Lower = longer rays. */
+const FALLOFF    = 1.5;
 
 const VERTEX_SHADER = /* glsl */`
   varying vec2 vUv;
@@ -25,64 +25,40 @@ const FRAGMENT_SHADER = /* glsl */`
   precision mediump float;
   varying vec2 vUv;
 
-  uniform float uTime;
-  uniform float uMaxAlpha;
-  uniform float uShadowScale;
-  uniform float uSecondary;
-
-  // ——— Hash-based 2D noise ———
-  float hash(vec2 p) {
-    p = fract(p * vec2(127.1, 311.7) + vec2(43.3, 89.1));
-    p += dot(p, p + 45.32);
-    return fract(p.x * p.y);
-  }
-
-  // Smooth noise via bilinear interpolation
-  float noise(vec2 p) {
-    vec2 i = floor(p);
-    vec2 f = fract(p);
-    f = f * f * (3.0 - 2.0 * f); // smoothstep
-    float a = hash(i);
-    float b = hash(i + vec2(1.0, 0.0));
-    float c = hash(i + vec2(0.0, 1.0));
-    float d = hash(i + vec2(1.0, 1.0));
-    return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
-  }
-
-  // Fractal Brownian Motion — multi-octave organic detail
-  float fbm(vec2 p) {
-    float value = 0.0;
-    float amplitude = 0.5;
-    float frequency = 1.0;
-    for (int i = 0; i < 3; i++) {
-      value += amplitude * noise(p * frequency);
-      frequency *= 2.02;
-      amplitude *= 0.48;
-    }
-    return value;
-  }
+  uniform float  uTime;
+  uniform float  uMaxAlpha;
+  uniform float  uRayCount;
+  uniform float  uFalloff;
+  uniform vec2   uLightPos;   // UV-space position of the light source
 
   void main() {
-    // World-proportional coords, centered at origin
-    vec2 p = (vUv - 0.5) * uShadowScale;
+    float t = uTime;
 
-    // Drift coordinates for wind movement
-    vec2 drift = vec2(uTime * 0.15, uTime * 0.08);
+    // Polar coords centered on the light source
+    vec2  delta = vUv - uLightPos;
+    float dist  = length(delta);
+    float angle = atan(delta.y, delta.x);
 
-    // Primary layer: thick branch-like shadows
-    float n0 = fbm(p * 0.5 + drift * 0.5);
-    float shadow0 = smoothstep(0.42, 0.62, n0);
+    // Angular shadow bands — three overlapping sine waves at the same angular
+    // frequency create irregular ray widths (avoids a mechanical pinwheel look).
+    // Negative regions become the shadow between rays; white desk shows through
+    // the positive (bright) regions = the visible light shafts.
+    float a = sin(angle * uRayCount        + t * 0.30);
+    float b = sin(angle * uRayCount * 1.55 - t * 0.17);
+    float c = sin(angle * uRayCount * 0.62 + t * 0.09);
 
-    // Secondary layer: fine leaf dappling on top
-    float n1 = fbm(p * 1.8 + drift * 0.8);
-    float shadow1 = smoothstep(0.45, 0.60, n1);
+    // Shadow sits in the "troughs" — where all three are low simultaneously.
+    // Taking the min then pushing negative maximises dark-band contrast.
+    float trough = -min(a, min(b, c));
+    float shadow  = max(0.0, trough);
+    shadow = pow(shadow, 0.65); // soften the bands so edges are smooth
 
-    // Combine: shadow = dark areas from both layers
-    float shadow = (1.0 - shadow0) + (1.0 - shadow1) * uSecondary;
-    shadow /= (1.0 + uSecondary);
+    // Radial falloff: exponential from source + tiny hole at singularity.
+    float radial = exp(-dist * uFalloff) * smoothstep(0.0, 0.07, dist);
+    shadow *= radial;
 
-    // Soft fade at plane boundary
-    vec2 fade = smoothstep(0.0, 0.08, vUv) * smoothstep(1.0, 0.92, vUv);
+    // Soft fade at geometry boundary so effect doesn't hard-clip.
+    vec2 fade = smoothstep(0.0, 0.07, vUv) * smoothstep(1.0, 0.93, vUv);
     shadow *= fade.x * fade.y;
 
     gl_FragColor = vec4(0.0, 0.0, 0.0, shadow * uMaxAlpha);
@@ -98,10 +74,12 @@ export function DeskGoboShadow() {
     vertexShader: VERTEX_SHADER,
     fragmentShader: FRAGMENT_SHADER,
     uniforms: {
-      uTime:        { value: 0 },
-      uMaxAlpha:    { value: MAX_ALPHA },
-      uShadowScale: { value: SHADOW_SCALE },
-      uSecondary:   { value: SECONDARY_ALPHA },
+      uTime:     { value: 0 },
+      uMaxAlpha: { value: MAX_ALPHA },
+      uRayCount: { value: RAY_COUNT },
+      uFalloff:  { value: FALLOFF },
+      // Upper-left area of the desk — light coming from a window in that corner
+      uLightPos: { value: new Vector2(0.12, 0.14) },
     },
     transparent: true,
     depthWrite: false,

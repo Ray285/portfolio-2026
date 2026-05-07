@@ -11,7 +11,6 @@ import { useDeskSceneId } from "@/context/DeskSceneContext";
 import { useDeskControls } from "@/context/DeskControlsContext";
 import { useDeskIntroOptional } from "@/context/DeskIntroContext";
 import { DeskSurface } from "./DeskSurface";
-import { DeskGoboShadow } from "./DeskGoboShadow";
 import { CameraViewControls } from "./CameraViewControls";
 import { DeskBall } from "./DeskBall";
 import { DeskPhysicsProvider } from "./DeskPhysicsContext";
@@ -736,7 +735,6 @@ export default function DeskScene() {
           <ResponsiveCamera />
           <SceneLights />
           <DeskSurface />
-          <DeskGoboShadow />
           <WelcomeHeaderGate />
           <Physics gravity={[0, -30, 0]} timeStep="vary">
             {/* Desk surface collider — matches DeskSurface planeGeometry at y=-0.04 */}
@@ -785,6 +783,14 @@ function SceneLights() {
       />
       <KeyLight />
       <FillLight />
+      <spotLight
+        position={[controls.spotLightX, controls.spotLightY, controls.spotLightZ]}
+        color="#fff5df"
+        intensity={controls.spotLightIntensity}
+        angle={controls.spotLightAngle}
+        penumbra={controls.spotLightPenumbra}
+        decay={0}
+      />
       <Environment preset="studio" environmentIntensity={controls.environment} />
     </>
   );

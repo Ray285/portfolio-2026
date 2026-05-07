@@ -18,6 +18,7 @@ import {
   DEFAULT_CAMERA,
   DEFAULT_FILL_LIGHT,
   DEFAULT_KEY_LIGHT,
+  DEFAULT_SPOT_LIGHT,
 } from "@/lib/desk-scene-defaults";
 
 export type DeskControls = {
@@ -47,6 +48,15 @@ export type DeskControls = {
   fillLightX: number;
   fillLightY: number;
   fillLightZ: number;
+  /** SpotLight: warm window-light cone (no shadow map — avoids double-shadow artifact). */
+  spotLightIntensity: number;
+  spotLightX: number;
+  spotLightY: number;
+  spotLightZ: number;
+  /** Cone half-angle in radians. */
+  spotLightAngle: number;
+  /** Soft edge fraction of the cone (0 = hard, 1 = fully soft). */
+  spotLightPenumbra: number;
 };
 
 const defaultControls: DeskControls = {
@@ -71,6 +81,12 @@ const defaultControls: DeskControls = {
   fillLightX: DEFAULT_FILL_LIGHT.x,
   fillLightY: DEFAULT_FILL_LIGHT.y,
   fillLightZ: DEFAULT_FILL_LIGHT.z,
+  spotLightIntensity: 1.2,
+  spotLightX: DEFAULT_SPOT_LIGHT.x,
+  spotLightY: DEFAULT_SPOT_LIGHT.y,
+  spotLightZ: DEFAULT_SPOT_LIGHT.z,
+  spotLightAngle: Math.PI / 5,
+  spotLightPenumbra: 0.7,
 };
 
 function createInitialControlsState(scene: DeskSceneId): DeskControls {
@@ -129,6 +145,25 @@ export function DeskControlsProvider({ children }: { children: ReactNode }) {
   const [controls, setControls] = useState<DeskControls>(() =>
     createInitialControlsState(scene),
   );
+
+  useEffect(() => {
+    fetch("/desk-scene-config.json")
+      .then((r) => (r.ok ? r.json() : null))
+      .catch(() => null)
+      .then((data: unknown) => {
+        if (
+          data !== null &&
+          typeof data === "object" &&
+          "version" in data &&
+          (data as { version: unknown }).version === 1 &&
+          "controls" in data &&
+          typeof (data as { controls: unknown }).controls === "object"
+        ) {
+          const saved = (data as { controls: Partial<DeskControls> }).controls;
+          setControls((prev) => ({ ...prev, ...saved }));
+        }
+      });
+  }, []);
   const [arrangeMode, setArrangeModeState] = useState(false);
   const [selectionIds, setSelectionIds] = useState<string[]>([]);
   const [primarySelectionId, setPrimarySelectionId] = useState<string | null>(

@@ -230,6 +230,65 @@ const SECTIONS: { title: string; items: SliderConfig[] }[] = [
     ],
   },
   {
+    title: "Spot light (window light)",
+    items: [
+      {
+        key: "spotLightX",
+        label: "Spot X",
+        description:
+          "Horizontal world position of the spot light. Negative = left of the desk (upper-left window feel).",
+        min: -30,
+        max: 10,
+        step: 0.5,
+      },
+      {
+        key: "spotLightY",
+        label: "Spot Y",
+        description:
+          "Height of the spot light above the desk. Higher = shallower angle, smaller shadow elongation.",
+        min: 4,
+        max: 25,
+        step: 0.5,
+      },
+      {
+        key: "spotLightZ",
+        label: "Spot Z",
+        description:
+          "Depth position of the spot light. Pair with X to aim it at the part of the desk you want lit.",
+        min: -20,
+        max: 10,
+        step: 0.5,
+      },
+      {
+        key: "spotLightIntensity",
+        label: "Intensity",
+        description:
+          "Brightness of the spot. Keep it subtle relative to the key light so you get warm pooling, not a blown-out circle.",
+        min: 0,
+        max: 10,
+        step: 0.1,
+      },
+      {
+        key: "spotLightAngle",
+        label: "Cone angle (rad)",
+        description:
+          "Half-angle of the cone in radians. Smaller = tighter beam; larger = wider lit pool on the desk.",
+        min: 0.1,
+        max: 1.2,
+        step: 0.01,
+      },
+      {
+        key: "spotLightPenumbra",
+        label: "Penumbra",
+        description:
+          "Softness of the cone edge (0 = hard cutoff, 1 = fully graduated). High values give a natural window-light fade.",
+        min: 0,
+        max: 1,
+        step: 0.01,
+      },
+    ],
+  },
+  {
     title: "Contact shadows and polaroid",
     items: [
       {
@@ -537,15 +596,26 @@ export function SceneControlsPanel() {
           </div>
         </div>
       ) : null}
-      <p className="mb-2 text-[9px] leading-relaxed text-zinc-500">
-        Camera and light defaults live in{" "}
-        <code className="rounded bg-zinc-100 px-0.5">desk-scene-defaults.ts</code>{" "}
-        and the context defaults; the panel edits live state only. Code:{" "}
-        <code className="rounded bg-zinc-100 px-0.5">ResponsiveCamera</code>,{" "}
-        <code className="rounded bg-zinc-100 px-0.5">KeyLight</code>, and{" "}
-        <code className="rounded bg-zinc-100 px-0.5">FillLight</code> in{" "}
-        <code className="rounded bg-zinc-100 px-0.5">DeskScene.tsx</code>.
+      <p className="mb-1.5 text-[9px] leading-relaxed text-zinc-500">
+        Panel edits are live only. To persist: export below, drop{" "}
+        <code className="rounded bg-zinc-100 px-0.5">desk-scene-config.json</code>{" "}
+        in <code className="rounded bg-zinc-100 px-0.5">public/</code>, reload.
       </p>
+      <div className="mb-3 flex flex-wrap gap-1.5">
+        <button
+          type="button"
+          onClick={() => {
+            const json = JSON.stringify({ version: 1, controls }, null, 2);
+            const a = document.createElement("a");
+            a.href = `data:application/json;charset=utf-8,${encodeURIComponent(json)}`;
+            a.download = "desk-scene-config.json";
+            a.click();
+          }}
+          className="rounded border border-zinc-300 bg-white px-2 py-0.5 text-[10px] text-zinc-600 hover:border-zinc-500 hover:text-zinc-900"
+        >
+          Export scene config
+        </button>
+      </div>
       {SECTIONS.map((section) => (
         <Fragment key={section.title}>
           <h3 className="mb-1.5 mt-3 first:mt-0 text-[10px] font-bold uppercase tracking-wider text-zinc-500">

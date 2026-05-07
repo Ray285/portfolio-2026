@@ -40,3 +40,9 @@ export const DEFAULT_FILL_LIGHT = {
   y: 14,
   z: 12,
 } as const;
+
+export const DEFAULT_SPOT_LIGHT = {
+  x: -20,
+  y: 12,
+  z: -10,
+} as const;
