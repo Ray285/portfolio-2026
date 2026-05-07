@@ -38,7 +38,37 @@ type SliderConfig = {
   step: number;
 };
 
-const SECTIONS: { title: string; items: SliderConfig[] }[] = [
+type ColorPickerConfig = {
+  type: "color";
+  key: keyof DeskControls;
+  label: string;
+  description: string;
+};
+
+type SectionItem = SliderConfig | ColorPickerConfig;
+
+const SECTIONS: { title: string; items: SectionItem[] }[] = [
+  {
+    title: "Desk surface",
+    items: [
+      {
+        type: "color",
+        key: "deskColor",
+        label: "Desk color",
+        description:
+          "Background color of the desk plane. White keeps items reading cleanly; try warm cream or dark wood tones.",
+      },
+      {
+        key: "itemElevation",
+        label: "Item elevation",
+        description:
+          "Lifts all desk items off the surface by a global Y offset. Higher values spread contact shadows and increase apparent depth.",
+        min: 0,
+        max: 1,
+        step: 0.02,
+      },
+    ],
+  },
   {
     title: "Camera (orthographic, top view)",
     items: [
@@ -137,6 +167,13 @@ const SECTIONS: { title: string; items: SliderConfig[] }[] = [
         max: 20,
         step: 0.5,
       },
+      {
+        type: "color",
+        key: "keyLightColor",
+        label: "Key color",
+        description:
+          "Color tint of the main shadow-casting directional light. White is neutral; warm/cool shifts the whole shadow tone.",
+      },
     ],
   },
   {
@@ -182,6 +219,13 @@ const SECTIONS: { title: string; items: SliderConfig[] }[] = [
         max: 1,
         step: 0.01,
       },
+      {
+        type: "color",
+        key: "fillLightColor",
+        label: "Fill color",
+        description:
+          "Color tint of the fill light. Default is a very slightly warm off-white; shift it to complement the key.",
+      },
     ],
   },
   {
@@ -226,6 +270,20 @@ const SECTIONS: { title: string; items: SliderConfig[] }[] = [
         min: 0.5,
         max: 1.5,
         step: 0.01,
+      },
+      {
+        type: "color",
+        key: "hemisphereSkyColor",
+        label: "Hemisphere sky",
+        description:
+          "Sky color for the hemisphere light — tints the top of surfaces.",
+      },
+      {
+        type: "color",
+        key: "hemisphereGroundColor",
+        label: "Hemisphere ground",
+        description:
+          "Ground bounce color for the hemisphere light — tints the underside of surfaces.",
       },
     ],
   },
@@ -285,6 +343,13 @@ const SECTIONS: { title: string; items: SliderConfig[] }[] = [
         min: 0,
         max: 1,
         step: 0.01,
+      },
+      {
+        type: "color",
+        key: "spotLightColor",
+        label: "Spot color",
+        description:
+          "Color tint of the spot light. Default is a warm golden; shift toward blue for a cool overhead feel.",
       },
     ],
   },
@@ -624,32 +689,62 @@ export function SceneControlsPanel() {
           <ul className="mb-1 flex flex-col gap-3">
             {section.items.map((s) => (
               <li key={s.key}>
-                <div className="mb-0.5 flex items-baseline justify-between gap-1">
-                  <label
-                    className="text-[10px] font-medium text-zinc-700"
-                    htmlFor={`desk-${String(s.key)}`}
-                  >
-                    {s.label}
-                  </label>
-                  <span className="shrink-0 text-[9px] tabular-nums text-zinc-500">
-                    {formatValue(s.key, Number(controls[s.key]))}
-                  </span>
-                </div>
-                <p className="mb-1 text-[8px] leading-relaxed text-zinc-500">
-                  {s.description}
-                </p>
-                <input
-                  id={`desk-${String(s.key)}`}
-                  className="h-1 w-full cursor-pointer appearance-none rounded bg-zinc-200 accent-zinc-800"
-                  type="range"
-                  min={s.min}
-                  max={s.max}
-                  step={s.step}
-                  value={Number(controls[s.key])}
-                  onChange={(e) => {
-                    set(s.key, Number(e.target.value) as never);
-                  }}
-                />
+                {"type" in s && s.type === "color" ? (
+                  <>
+                    <div className="mb-0.5 flex items-center justify-between gap-1">
+                      <label
+                        className="text-[10px] font-medium text-zinc-700"
+                        htmlFor={`desk-${String(s.key)}`}
+                      >
+                        {s.label}
+                      </label>
+                      <span className="shrink-0 font-mono text-[9px] tabular-nums text-zinc-500">
+                        {String(controls[s.key])}
+                      </span>
+                    </div>
+                    <p className="mb-1 text-[8px] leading-relaxed text-zinc-500">
+                      {s.description}
+                    </p>
+                    <input
+                      id={`desk-${String(s.key)}`}
+                      type="color"
+                      className="h-6 w-full cursor-pointer rounded border border-zinc-200"
+                      value={String(controls[s.key])}
+                      onChange={(e) => {
+                        set(s.key, e.target.value as never);
+                      }}
+                    />
+                  </>
+                ) : (
+                  <>
+                    <div className="mb-0.5 flex items-baseline justify-between gap-1">
+                      <label
+                        className="text-[10px] font-medium text-zinc-700"
+                        htmlFor={`desk-${String(s.key)}`}
+                      >
+                        {s.label}
+                      </label>
+                      <span className="shrink-0 text-[9px] tabular-nums text-zinc-500">
+                        {formatValue(s.key, Number(controls[s.key]))}
+                      </span>
+                    </div>
+                    <p className="mb-1 text-[8px] leading-relaxed text-zinc-500">
+                      {s.description}
+                    </p>
+                    <input
+                      id={`desk-${String(s.key)}`}
+                      className="h-1 w-full cursor-pointer appearance-none rounded bg-zinc-200 accent-zinc-800"
+                      type="range"
+                      min={(s as SliderConfig).min}
+                      max={(s as SliderConfig).max}
+                      step={(s as SliderConfig).step}
+                      value={Number(controls[s.key])}
+                      onChange={(e) => {
+                        set(s.key, Number(e.target.value) as never);
+                      }}
+                    />
+                  </>
+                )}
               </li>
             ))}
           </ul>

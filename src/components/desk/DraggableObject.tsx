@@ -223,12 +223,17 @@ export function DraggableObject({
   const { camera, gl, size, scene: threeScene } = useThree();
   const { recordItem, recordItems } = useDeskLayout();
   const {
+    controls,
     arrangeMode,
     selectedLayoutIds,
     primarySelectionId,
     selectExclusiveLayout,
     toggleLayoutInArrangeSelection,
   } = useDeskControls();
+  const itemElevationRef = useRef(controls.itemElevation);
+  useLayoutEffect(() => {
+    itemElevationRef.current = controls.itemElevation;
+  }, [controls.itemElevation]);
   const isArrangeSelected = arrangeMode && selectedLayoutIds.includes(layoutId);
   const showArrangeRotateRing =
     arrangeMode &&
@@ -738,7 +743,7 @@ export function DraggableObject({
 
     const layoutMul = layoutScaleRef.current;
     const totalUniformScale = scaleRef.current * layoutMul;
-    const physicsY = base.y + liftRef.current + tiltClearanceRef.current;
+    const physicsY = base.y + liftRef.current + tiltClearanceRef.current + itemElevationRef.current;
     const halfH = config.focusApproxHalfHeight ?? 0.04;
     const minYForBall =
       DESK_BALL_CREST_Y +

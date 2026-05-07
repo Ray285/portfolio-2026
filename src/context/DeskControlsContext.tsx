@@ -57,6 +57,20 @@ export type DeskControls = {
   spotLightAngle: number;
   /** Soft edge fraction of the cone (0 = hard, 1 = fully soft). */
   spotLightPenumbra: number;
+  /** Hex color of the desk surface material. */
+  deskColor: string;
+  /** Hex color of the key (shadow-casting) directional light. */
+  keyLightColor: string;
+  /** Hex color of the fill directional light. */
+  fillLightColor: string;
+  /** Hex color of the spot (window) light. */
+  spotLightColor: string;
+  /** Hex sky color for the hemisphere light. */
+  hemisphereSkyColor: string;
+  /** Hex ground-bounce color for the hemisphere light. */
+  hemisphereGroundColor: string;
+  /** Global Y offset added to every desk item — lifts them off the surface. */
+  itemElevation: number;
 };
 
 const defaultControls: DeskControls = {
@@ -87,6 +101,13 @@ const defaultControls: DeskControls = {
   spotLightZ: DEFAULT_SPOT_LIGHT.z,
   spotLightAngle: Math.PI / 5,
   spotLightPenumbra: 0.7,
+  deskColor: "#ffffff",
+  keyLightColor: "#ffffff",
+  fillLightColor: "#f8f6f2",
+  spotLightColor: "#fff5df",
+  hemisphereSkyColor: "#ffffff",
+  hemisphereGroundColor: "#ededea",
+  itemElevation: 0,
 };
 
 function createInitialControlsState(scene: DeskSceneId): DeskControls {

@@ -565,6 +565,8 @@ export const deskItemId = {
   homeDeskVideo: "home-desk-video",
   /** Draggable desk copy from `DESK_TEXT_OVERLAYS` — id → `desk-text-${id}` */
   deskText: deskTextLayoutId,
+  /** Draggable jitter-text elements — same shader as welcome header */
+  jitterText: (index: number) => `jitter-text-${index}`,
 } as const;
 
 /** Fill missing `camera` JSON fields with [`DEFAULT_CAMERA`](desk-scene-defaults). */

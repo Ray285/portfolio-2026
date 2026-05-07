@@ -18,6 +18,7 @@ import { DraggableObject } from "./DraggableObject";
 import { RapierBoundaryWalls } from "./RapierBoundaryWalls";
 import { AboutDeskLoopVideo } from "./AboutDeskLoopVideo";
 import { DeskHandwritingLabel } from "./DeskHandwritingLabel";
+import { JitterText } from "./JitterText";
 import {
   DeskArrangeMarquee,
   type DeskMarqueeOverlayRect,
@@ -321,6 +322,20 @@ const DESK_TEXT_LAYOUT_DEFAULTS: Partial<
   Record<string, DeskItemLayout>
 > = {};
 
+/** Scattered jitter-text elements across the desk — same shader as welcome header.
+ *  Add entries here and place them via Arrange or the bundled JSON. */
+interface JitterDeskTextItem {
+  id: string;
+  text: string;
+  position: [number, number, number];
+  rotation: [number, number, number];
+  fontSize?: number;
+  maxWidth?: number;
+  lineHeight?: number;
+}
+
+const JITTER_DESK_TEXTS: JitterDeskTextItem[] = [];
+
 function applyToneMappingExposure(renderer: WebGLRenderer, exposure: number) {
   renderer.toneMappingExposure = exposure;
 }
@@ -373,6 +388,7 @@ function KeyLight() {
       castShadow
       position={[controls.keyLightX, controls.keyLightY, controls.keyLightZ]}
       intensity={controls.keyLight}
+      color={controls.keyLightColor}
     />
   );
 }
@@ -389,7 +405,7 @@ function FillLight() {
         controls.fillLightZ,
       ]}
       intensity={controls.fillLight}
-      color="#f8f6f2"
+      color={controls.fillLightColor}
     />
   );
 }
@@ -440,8 +456,22 @@ function ResponsiveCamera() {
   );
 }
 
+/** One entry for a handwritten text line in the welcome header. */
+interface WelcomeTextItem {
+  text: string;
+  position: [number, number, number];
+  fontSize?: number;
+  maxWidth?: number;
+  lineHeight?: number;
+}
+
+/** Default single-line text for the welcome header. */
+const DEFAULT_WELCOME_TEXTS: WelcomeTextItem[] = [
+  { text: "Hey, I'm Ray", position: [0, 0.04, 0.65], fontSize: 0.44, maxWidth: 14 },
+];
+
 /** Large static header on the desk; uses WOFF/OTF from `public/fonts/`. Registers with the intro stagger. */
-function WelcomeHeader() {
+function WelcomeHeader({ texts = DEFAULT_WELCOME_TEXTS }: { texts?: WelcomeTextItem[] }) {
   const groupRef = useRef<Group>(null);
   const stagger = useStaggerGsapOptional();
   const jitterUniformRef = useRef<{ value: number } | null>(null);
@@ -484,21 +514,24 @@ transformed.y += cos(charBin * 311.7  + frame * 47.124) * 0.009;`,
 
   return (
     <group ref={groupRef}>
-      <Text
-        position={[0, 0.04, 0.65]}
-        rotation={[-Math.PI / 2, 0, 0]}
-        anchorX="center"
-        anchorY="middle"
-        color="#1c1917"
-        font={HANDWRITING_FONT_URL}
-        fontSize={0.44}
-        maxWidth={14}
-        textAlign="center"
-        lineHeight={1.05}
-        material={jitterMaterial}
-      >
-        Hey, I'm Ray
-      </Text>
+      {texts.map((item, i) => (
+        <Text
+          key={i}
+          position={item.position}
+          rotation={[-Math.PI / 2, 0, 0]}
+          anchorX="center"
+          anchorY="middle"
+          color="#1c1917"
+          font={HANDWRITING_FONT_URL}
+          fontSize={item.fontSize ?? 0.44}
+          maxWidth={item.maxWidth ?? 14}
+          textAlign="center"
+          lineHeight={item.lineHeight ?? 1.05}
+          material={jitterMaterial}
+        >
+          {item.text}
+        </Text>
+      ))}
     </group>
   );
 }
@@ -616,7 +649,7 @@ function DeskObjects() {
             physics={ABOUT_LOOP_VIDEO_PHYSICS}
             rapierMode="none"
           >
-            <AboutDeskLoopVideo src="/images/output.webm" maxHeight={3.2} />
+            <AboutDeskLoopVideo src="/images/output-alpha.webm" maxHeight={3.2} />
           </DraggableObject>
         </Suspense>
       ) : null}
@@ -669,6 +702,34 @@ function DeskObjects() {
               >
                 {item.text}
               </DeskHandwritingLabel>
+            </DraggableObject>
+          </Suspense>
+        );
+      })}
+
+      {JITTER_DESK_TEXTS.map((item, index) => {
+        const layoutId = deskItemId.jitterText(index);
+        const hl = getItem(
+          layoutId,
+          { position: item.position, rotation: item.rotation },
+        );
+        return (
+          <Suspense key={layoutId} fallback={null}>
+            <DraggableObject
+              layoutId={layoutId}
+              position={hl.position}
+              rotation={hl.rotation}
+              layoutScale={hl.scale ?? 1}
+              physics={HANDWRITING_LABEL_PHYSICS}
+              rapierMode="none"
+            >
+              <JitterText
+                fontSize={item.fontSize}
+                maxWidth={item.maxWidth}
+                lineHeight={item.lineHeight}
+              >
+                {item.text}
+              </JitterText>
             </DraggableObject>
           </Suspense>
         );
@@ -777,15 +838,15 @@ function SceneLights() {
     <>
       <ambientLight intensity={controls.ambient} />
       <hemisphereLight
-        color="#ffffff"
-        groundColor="#ededea"
+        color={controls.hemisphereSkyColor}
+        groundColor={controls.hemisphereGroundColor}
         intensity={controls.hemisphere}
       />
       <KeyLight />
       <FillLight />
       <spotLight
         position={[controls.spotLightX, controls.spotLightY, controls.spotLightZ]}
-        color="#fff5df"
+        color={controls.spotLightColor}
         intensity={controls.spotLightIntensity}
         angle={controls.spotLightAngle}
         penumbra={controls.spotLightPenumbra}

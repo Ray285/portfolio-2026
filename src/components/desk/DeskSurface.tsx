@@ -1,9 +1,12 @@
+import { useDeskControls } from "@/context/DeskControlsContext";
+
 /**
  * Floor is intentionally **not** lit by the IBL. A flat white `meshStandard`
  * with `scene.environment` often picks up a darker ring from the environment
  * map, which looks like a gray "frame" around the desk at a top-down view.
  */
 export function DeskSurface() {
+  const { controls } = useDeskControls();
   return (
     <mesh
       position={[0, -0.04, 0]}
@@ -12,7 +15,7 @@ export function DeskSurface() {
     >
       <planeGeometry args={[32, 22]} />
       <meshStandardMaterial
-        color="#ffffff"
+        color={controls.deskColor}
         roughness={0.88}
         metalness={0}
         envMapIntensity={0}
