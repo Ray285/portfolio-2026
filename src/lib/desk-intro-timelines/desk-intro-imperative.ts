@@ -820,6 +820,34 @@ export function appendDeskPropsIntroImperative(
     }
   }
 
+  /* ——— Catch-all: registered targets not covered by an explicit block above ———
+   *  Handles items added to the desk after the choreography was written (e.g.
+   *  jitter-text elements) so they aren't permanently opacity-zeroed by the
+   *  DraggableObject frame loop, which keeps items at FROM_OPACITY until they
+   *  appear in animatedIds. */
+  for (const [layoutId, o] of targets) {
+    if (animatedIds.has(layoutId) || layoutId === focusItemId) {
+      continue;
+    }
+    animatedIds.add(layoutId);
+    setObject3DTreeOpacity(o, FROM_OPACITY);
+    const op = { v: FROM_OPACITY };
+    deskProps.fromTo(
+      op,
+      { v: FROM_OPACITY },
+      {
+        v: 1,
+        duration: PROP_INTRO_DURATION_SEC,
+        ease: PROP_INTRO_EASE,
+        immediateRender: false,
+        onUpdate: () => setObject3DTreeOpacity(o, op.v),
+      },
+      t,
+    );
+    t += STAGGER_GAP_SEC;
+    anyAdded = true;
+  }
+
   if (!anyAdded) {
     return false;
   }

@@ -334,7 +334,41 @@ interface JitterDeskTextItem {
   lineHeight?: number;
 }
 
-const JITTER_DESK_TEXTS: JitterDeskTextItem[] = [];
+const JITTER_DESK_TEXTS: JitterDeskTextItem[] = [
+  {
+    id: "note-role",
+    text: "→ UX Researcher + Designer",
+    position: [2.0, 0.04, 0.5],
+    rotation: [0, 0.08, 0],
+    fontSize: 0.28,
+    maxWidth: 5,
+  },
+  {
+    id: "note-available",
+    text: "→ available for work",
+    position: [2.0, 0.04, 0.5],
+    rotation: [0, 0.08, 0],
+    fontSize: 0.28,
+    maxWidth: 5,
+  },
+  {
+    id: "note-based-in",
+    text: "→ based in Detroit",
+    position: [2.9, 0.04, 0.9],
+    rotation: [0, -0.07, 0],
+    fontSize: 0.3,
+    maxWidth: 4,
+    lineHeight: 1.1,
+  },
+  {
+    id: "note-roll",
+    text: "Roll me →",
+    position: [1.8, 0.04, 1.3],
+    rotation: [0, 0.05, 0],
+    fontSize: 0.22,
+    maxWidth: 6,
+  },
+];
 
 function applyToneMappingExposure(renderer: WebGLRenderer, exposure: number) {
   renderer.toneMappingExposure = exposure;
@@ -707,7 +741,7 @@ function DeskObjects() {
         );
       })}
 
-      {JITTER_DESK_TEXTS.map((item, index) => {
+      {scene === DESK_SCENE_HOME && JITTER_DESK_TEXTS.map((item, index) => {
         const layoutId = deskItemId.jitterText(index);
         const hl = getItem(
           layoutId,
