@@ -18,13 +18,14 @@ import {
   formatDeskLayoutJson,
   getDeskLayoutStorageKey,
   hasDeskLayoutInStorageForKey,
+  isDeskLayoutFileV1,
   mergeDeskItemLayout,
   readDeskLayoutFromStorageKey,
   tryParseDeskLayoutJson,
   writeDeskLayoutToStorageKey,
   type DeskItemLayout,
 } from "@/lib/desk-layout";
-import type { DeskSceneId } from "@/lib/desk-scene-id";
+import { DESK_SCENE_HOME, type DeskSceneId } from "@/lib/desk-scene-id";
 
 function getInitialLayoutPack(scene: DeskSceneId): {
   state: LayoutState;
@@ -88,6 +89,28 @@ export function DeskLayoutProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     itemsRef.current = state.items;
   }, [state.items]);
+
+  useEffect(() => {
+    if (scene !== DESK_SCENE_HOME) return;
+    if (hasDeskLayoutInStorageForKey(storageKey)) return;
+    fetch("/desk-layout-v1.json")
+      .then((r) => (r.ok ? r.json() : null))
+      .catch(() => null)
+      .then((data: unknown) => {
+        if (!isDeskLayoutFileV1(data)) return;
+        const b: [number, number] =
+          data.ball != null
+            ? [data.ball[0], data.ball[1]]
+            : [bundledBall[0], bundledBall[1]];
+        ballTrackRef.current = b;
+        setState((prev) => ({
+          ...prev,
+          items: { ...data.items },
+          ball: data.ball != null ? [data.ball[0], data.ball[1]] : null,
+        }));
+      });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scene]);
 
   const getItem = useCallback(
     (id: string, fallback: DeskItemLayout): DeskItemLayout => {

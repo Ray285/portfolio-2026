@@ -28,6 +28,7 @@ export function DeskShellLayout({ children }: DeskShellLayoutProps) {
   );
   const showGsapDevtools = false;
     // process.env.NODE_ENV === "development" && GSAP_DEVTOOLS_ENABLED;
+  const showScenePanel = process.env.NODE_ENV === "development";
 
   return (
     <DeskSceneIdProvider sceneId={sceneId}>
@@ -37,7 +38,7 @@ export function DeskShellLayout({ children }: DeskShellLayoutProps) {
             <DeskLayoutProvider>
               <main className="relative z-0 min-h-dvh w-full min-w-0 max-w-none overflow-x-hidden bg-white">
                 <DeskScene />
-                <SceneControlsPanel />
+                {showScenePanel ? <SceneControlsPanel /> : null}
                 {showGsapDevtools ? <GsapDevToolsBridge /> : null}
                 {children}
               </main>
