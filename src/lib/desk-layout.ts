@@ -531,7 +531,7 @@ export function tryParseDeskLayoutJson(s: string): {
 /** Stable id helpers (match `DeskScene` usage). */
 export const deskItemId = {
   card: (index: number) => `card-${index}`,
-  polaroid: (index: number) => `polaroid-${index}`,
+  polaroid: (slug: string) => `polaroid-${slug}`,
   /** `/about` polaroids — **`slug`** matches [`PolaroidItem.layoutId`](portfolio-data.ts). */
   aboutPolaroid: (slug: string) => `about-polaroid-${slug}`,
   nameplate: "nameplate",

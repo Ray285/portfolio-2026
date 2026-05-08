@@ -35,9 +35,12 @@ import {
   aboutPolaroids,
   getDeskTextOverlaysForScene,
   getPortfolioLinkCta,
-  polaroids,
   portfolioItems,
 } from "@/lib/portfolio-data";
+import {
+  usePolaroidManifest,
+  polaroidManifestItemImageUrl,
+} from "@/lib/polaroid-manifest";
 import { HANDWRITING_FONT_URL } from "@/lib/desk-handwriting-font";
 import { setObject3DTreeOpacity } from "@/lib/three-object-opacity";
 import { WELCOME_HEADER_STAGGER_ID } from "@/lib/desk-intro-timelines/desk-intro-imperative";
@@ -606,8 +609,7 @@ function polaroidDefaultLayoutAbout(slug: string): DeskItemLayout {
 function DeskObjects() {
   const scene = useDeskSceneId();
   const { getItem, getBallXZ, sampleBallXZ, recordBall } = useDeskLayout();
-  const polaroidList =
-    scene === DESK_SCENE_ABOUT ? aboutPolaroids : polaroids;
+  const manifestItems = usePolaroidManifest();
 
   return (
     <>
@@ -640,38 +642,63 @@ function DeskObjects() {
         );
       })}
 
-      <Suspense fallback={null}>
-        {polaroidList.map((photo, index) => {
-          const aboutSlug = photo.layoutId;
-          const layoutId =
-            scene === DESK_SCENE_ABOUT && aboutSlug != null
-              ? deskItemId.aboutPolaroid(aboutSlug)
-              : deskItemId.polaroid(index);
-          const def =
-            scene === DESK_SCENE_ABOUT && aboutSlug != null
-              ? polaroidDefaultLayoutAbout(aboutSlug)
-              : polaroidDefaultLayout(index);
-          const l = getItem(layoutId, def);
-          return (
-            <DraggableObject
-              key={layoutId}
-              layoutId={layoutId}
-              position={l.position}
-              rotation={l.rotation}
-              layoutScale={l.scale ?? 1}
-              physics={POLAROID_PHYSICS}
-              rapierMode="kinematic"
-              href={scene === DESK_SCENE_HOME && photo.href ? photo.href : undefined}
-            >
-              <PolaroidPhoto
-                palette={photo.palette}
-                imageUrl={photo.imageUrl}
-                flashCutImages={index === 0 && scene === DESK_SCENE_HOME ? HOME_INTRO_FLASH_CUT_IMAGES : undefined}
-              />
-            </DraggableObject>
-          );
-        })}
-      </Suspense>
+      {/* Home scene: manifest-driven polaroids */}
+      {scene === DESK_SCENE_HOME && (
+        <Suspense fallback={null}>
+          {manifestItems.map((photo, index) => {
+            const layoutId = deskItemId.polaroid(photo.slug);
+            const def = polaroidDefaultLayout(index);
+            const l = getItem(layoutId, def);
+            return (
+              <DraggableObject
+                key={layoutId}
+                layoutId={layoutId}
+                position={l.position}
+                rotation={l.rotation}
+                layoutScale={l.scale ?? 1}
+                physics={POLAROID_PHYSICS}
+                rapierMode="kinematic"
+                href={photo.href}
+              >
+                <PolaroidPhoto
+                  palette={photo.palette}
+                  imageUrl={polaroidManifestItemImageUrl(photo)}
+                  flashCutImages={index === 0 ? HOME_INTRO_FLASH_CUT_IMAGES : undefined}
+                />
+              </DraggableObject>
+            );
+          })}
+        </Suspense>
+      )}
+
+      {/* About scene: static polaroid list */}
+      {scene === DESK_SCENE_ABOUT && (
+        <Suspense fallback={null}>
+          {aboutPolaroids.map((photo) => {
+            const aboutSlug = photo.layoutId;
+            if (aboutSlug == null) return null;
+            const layoutId = deskItemId.aboutPolaroid(aboutSlug);
+            const def = polaroidDefaultLayoutAbout(aboutSlug);
+            const l = getItem(layoutId, def);
+            return (
+              <DraggableObject
+                key={layoutId}
+                layoutId={layoutId}
+                position={l.position}
+                rotation={l.rotation}
+                layoutScale={l.scale ?? 1}
+                physics={POLAROID_PHYSICS}
+                rapierMode="kinematic"
+              >
+                <PolaroidPhoto
+                  palette={photo.palette}
+                  imageUrl={photo.imageUrl}
+                />
+              </DraggableObject>
+            );
+          })}
+        </Suspense>
+      )}
 
       {scene === DESK_SCENE_HOME ? (
         <Suspense fallback={null}>

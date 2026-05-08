@@ -201,10 +201,10 @@ export function homeCardLayoutIdFromDeskSlug(slug: string): string | undefined {
   return i >= 0 ? `card-${i}` : undefined;
 }
 
-/** Maps {@link PolaroidItem.deskSlug} on home polaroids → `polaroid-{index}` */
+/** Maps {@link PolaroidItem.deskSlug} on home polaroids → `polaroid-{slug}` */
 export function homePolaroidLayoutIdFromDeskSlug(slug: string): string | undefined {
-  const i = polaroids.findIndex((p) => p.deskSlug === slug);
-  return i >= 0 ? `polaroid-${i}` : undefined;
+  const exists = polaroids.some((p) => p.deskSlug === slug);
+  return exists ? `polaroid-${slug}` : undefined;
 }
 
 /**

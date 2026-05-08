@@ -42,7 +42,7 @@ export const HOME_FOCUS_POLAROID_DESK_SLUG = "raymond";
 
 export const HOME_FOCUS_ITEM_ID =
   homePolaroidLayoutIdFromDeskSlug(HOME_FOCUS_POLAROID_DESK_SLUG) ??
-  "polaroid-0";
+  `polaroid-${HOME_FOCUS_POLAROID_DESK_SLUG}`;
 
 /** Camera segment — tweened in `home.ts` onto the GSAP master before desk props. */
 export const HOME_DESK_INTRO_ZOOM_OUT: DeskIntroZoomOutFromItem = {

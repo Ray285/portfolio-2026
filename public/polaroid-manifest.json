@@ -1,0 +1,132 @@
+{
+  "version": 1,
+  "items": [
+    {
+      "file": "self-portrait_Raymond-Lemon.jpeg",
+      "slug": "raymond",
+      "title": "Raymond",
+      "caption": "self portrait"
+    },
+    {
+      "palette": [
+        "#f8fafc",
+        "#dbeafe",
+        "#111827"
+      ],
+      "slug": "interface-study",
+      "title": "Interface Study",
+      "caption": "visual system"
+    },
+    {
+      "palette": [
+        "#fff7ed",
+        "#fed7aa",
+        "#292524"
+      ],
+      "slug": "prototype-desk",
+      "title": "Prototype Desk",
+      "caption": "interaction test"
+    },
+    {
+      "palette": [
+        "#f0fdf4",
+        "#bbf7d0",
+        "#14532d"
+      ],
+      "slug": "launch-notes",
+      "title": "Launch Notes",
+      "caption": "case study",
+      "href": "/case-study/launch-notes"
+    },
+    {
+      "file": "tumblr_mim0g52K5g1r43l79o1_1280.jpg",
+      "slug": "archive-01",
+      "title": "Archive 01",
+      "caption": "reference"
+    },
+    {
+      "file": "tumblr_lqdx6hjVCK1r25pfoo1_400.jpg",
+      "slug": "archive-02",
+      "title": "Archive 02",
+      "caption": "reference"
+    },
+    {
+      "file": "tumblr_m3sdguCMIj1r9bpg5o1_500.jpg",
+      "slug": "archive-03",
+      "title": "Archive 03",
+      "caption": "reference"
+    },
+    {
+      "file": "tumblr_lqct1fWfkz1r25pfoo1_1280.png",
+      "slug": "archive-04",
+      "title": "Archive 04",
+      "caption": "reference"
+    },
+    {
+      "file": "gph9wwt1g7jha_600.jpg",
+      "slug": "archive-05",
+      "title": "Archive 05",
+      "caption": "reference"
+    },
+    {
+      "file": "tumblr_ly45zrXkTk1qbycdbo1_500.jpg",
+      "slug": "archive-06",
+      "title": "Archive 06",
+      "caption": "reference"
+    },
+    {
+      "file": "tumblr_lqdx845i7Z1r25pfoo1_1280.jpg",
+      "slug": "archive-07",
+      "title": "Archive 07",
+      "caption": "reference"
+    },
+    {
+      "file": "tumblr_ecf12b41d4978f19e6c19b6fe2c34a61_1fb5f3b6_1280.webp",
+      "slug": "archive-08",
+      "title": "Archive 08",
+      "caption": "webp"
+    },
+    {
+      "file": "tumblr_mf82gvgl0c1qbn6jwo1_500.webp",
+      "slug": "archive-09",
+      "title": "Archive 09",
+      "caption": "webp"
+    },
+    {
+      "file": "tumblr_e12412e43fea279b5abed82b9c0edadb_af6932f4_500.webp",
+      "slug": "archive-10",
+      "title": "Archive 10",
+      "caption": "webp"
+    },
+    {
+      "file": "tumblr_3573c8c542e167975df4f916944bf2b7_808f14bb_500.webp",
+      "slug": "archive-11",
+      "title": "Archive 11",
+      "caption": "webp"
+    },
+    {
+      "file": "tumblr_572a28339585fb7dc3681954be2d69a3_7a2a781a_640.webp",
+      "slug": "archive-12",
+      "title": "Archive 12",
+      "caption": "webp"
+    },
+    {
+      "file": "tumblr_n038iw9RZT1reeolao1_500.webp",
+      "slug": "archive-13",
+      "title": "Archive 13",
+      "caption": "reference"
+    },
+    {
+      "file": "tumblr_nhi44qqDrk1rvxid3o1_500.webp",
+      "slug": "archive-14",
+      "title": "Archive 14",
+      "caption": "reference"
+    },
+    {
+      "file": "tumblr_nv6b294dmC1uxy8t7o1_1280.jpg",
+      "slug": "archive-15",
+      "title": "Archive 15",
+      "caption": "reference"
+    }
+  ]
+}

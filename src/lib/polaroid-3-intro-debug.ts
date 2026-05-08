@@ -1,7 +1,7 @@
 import type { Object3D } from "three";
 
-/** Matches `deskItemId.polaroid(3)` */
-export const POLAROID_3_LAYOUT_ID = "polaroid-3";
+/** Matches `deskItemId.polaroid("launch-notes")` */
+export const POLAROID_3_LAYOUT_ID = "polaroid-launch-notes";
 
 export function isPolaroid3IntroDebug(layoutId: string): boolean {
   return (

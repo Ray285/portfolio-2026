@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
-import type { Mesh, MeshStandardMaterial, Texture } from "three";
+import type { Mesh, MeshBasicMaterial, MeshStandardMaterial, Texture } from "three";
 import type { RefObject } from "react";
 
 // [imageIndex, durationMs] — cycles 0-3 with linear ramp (80ms → 250ms), lands on 4 (self-portrait)
@@ -17,7 +17,7 @@ export type PrintSize = { w: number; h: number };
 
 export function useFlashCutSchedule(
   textures: Texture[],
-  matRef: RefObject<MeshStandardMaterial | null>,
+  matRef: RefObject<MeshStandardMaterial | MeshBasicMaterial | null>,
   meshRef: RefObject<Mesh | null>,
   printSizes: PrintSize[],
 ): void {

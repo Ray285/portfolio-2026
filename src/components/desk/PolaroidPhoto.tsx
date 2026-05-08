@@ -5,6 +5,7 @@ import { useTexture } from "@react-three/drei";
 import {
   CanvasTexture,
   Mesh,
+  MeshBasicMaterial,
   MeshStandardMaterial,
   SRGBColorSpace,
   Texture,
@@ -114,13 +115,13 @@ function textureBackingDimensions(tex: Texture): { w: number; h: number } {
   return { w: iw || 0, h: ih || 0 };
 }
 
-type PolaroidImageBlockProps = { texture: Texture };
+type PolaroidImageBlockProps = { texture: Texture; unlitFace: boolean };
 
 /**
  * A thin box instead of a single plane: a flat print parallel to the desk
  * throws almost no shadow; extruding slightly restores a legible cast shadow.
  */
-function PolaroidImageBlock({ texture }: PolaroidImageBlockProps) {
+function PolaroidImageBlock({ texture, unlitFace }: PolaroidImageBlockProps) {
   const { w, h } = usePhotoPrintPlaneSize(texture);
   const dims = textureBackingDimensions(texture);
   const texReady = dims.w > 0 && dims.h > 0;
@@ -160,17 +161,28 @@ function PolaroidImageBlock({ texture }: PolaroidImageBlockProps) {
         transparent={!fullOp}
         depthWrite={fullOp}
       />
-      <meshStandardMaterial
-        attach="material-2"
-        map={texture}
-        roughness={0.8}
-        metalness={0}
-        toneMapped={false}
-        envMapIntensity={0.15}
-        opacity={op}
-        transparent={!fullOp}
-        depthWrite={fullOp}
-      />
+      {unlitFace ? (
+        <meshBasicMaterial
+          attach="material-2"
+          map={texture}
+          toneMapped={false}
+          opacity={op}
+          transparent={!fullOp}
+          depthWrite={fullOp}
+        />
+      ) : (
+        <meshStandardMaterial
+          attach="material-2"
+          map={texture}
+          roughness={0.8}
+          metalness={0}
+          toneMapped={false}
+          envMapIntensity={0.15}
+          opacity={op}
+          transparent={!fullOp}
+          depthWrite={fullOp}
+        />
+      )}
       <meshStandardMaterial
         attach="material-3"
         {...EDGE_MAT}
@@ -200,19 +212,20 @@ function PolaroidImageBlock({ texture }: PolaroidImageBlockProps) {
 type PolaroidWithImageUrlProps = {
   imageUrl: string;
   showFrame: boolean;
+  unlitFace: boolean;
 };
 
-function PolaroidWithImageUrl({ imageUrl, showFrame }: PolaroidWithImageUrlProps) {
+function PolaroidWithImageUrl({ imageUrl, showFrame, unlitFace }: PolaroidWithImageUrlProps) {
   const texture = useTexture(imageUrl);
   return (
     <group>
       {showFrame ? <PolaroidFrame /> : null}
-      <PolaroidImageBlock texture={texture} />
+      <PolaroidImageBlock texture={texture} unlitFace={unlitFace} />
     </group>
   );
 }
 
-function PolaroidWithCanvasImage({ imageUrl, showFrame }: PolaroidWithImageUrlProps) {
+function PolaroidWithCanvasImage({ imageUrl, showFrame, unlitFace }: PolaroidWithImageUrlProps) {
   const texture = useAnimatedImageTexture(imageUrl);
   if (!texture) {
     return showFrame ? (
@@ -224,7 +237,7 @@ function PolaroidWithCanvasImage({ imageUrl, showFrame }: PolaroidWithImageUrlPr
   return (
     <group>
       {showFrame ? <PolaroidFrame /> : null}
-      <PolaroidImageBlock texture={texture} />
+      <PolaroidImageBlock texture={texture} unlitFace={unlitFace} />
     </group>
   );
 }
@@ -232,9 +245,10 @@ function PolaroidWithCanvasImage({ imageUrl, showFrame }: PolaroidWithImageUrlPr
 type PolaroidWithGradientProps = {
   palette: [string, string, string];
   showFrame: boolean;
+  unlitFace: boolean;
 };
 
-function PolaroidWithGradient({ palette, showFrame }: PolaroidWithGradientProps) {
+function PolaroidWithGradient({ palette, showFrame, unlitFace }: PolaroidWithGradientProps) {
   const texture = useMemo(() => {
     const canvas = document.createElement("canvas");
     canvas.width = 512;
@@ -299,17 +313,28 @@ function PolaroidWithGradient({ palette, showFrame }: PolaroidWithGradientProps)
             transparent={!fullOp}
             depthWrite={fullOp}
           />
-          <meshStandardMaterial
-            attach="material-2"
-            map={texture}
-            roughness={0.8}
-            metalness={0}
-            toneMapped={false}
-            envMapIntensity={0.15}
-            opacity={op}
-            transparent={!fullOp}
-            depthWrite={fullOp}
-          />
+          {unlitFace ? (
+            <meshBasicMaterial
+              attach="material-2"
+              map={texture}
+              toneMapped={false}
+              opacity={op}
+              transparent={!fullOp}
+              depthWrite={fullOp}
+            />
+          ) : (
+            <meshStandardMaterial
+              attach="material-2"
+              map={texture}
+              roughness={0.8}
+              metalness={0}
+              toneMapped={false}
+              envMapIntensity={0.15}
+              opacity={op}
+              transparent={!fullOp}
+              depthWrite={fullOp}
+            />
+          )}
           <meshStandardMaterial
             attach="material-3"
             {...EDGE_MAT}
@@ -343,16 +368,17 @@ function PolaroidWithGradient({ palette, showFrame }: PolaroidWithGradientProps)
 type PolaroidImageBlockFlashCutProps = {
   textures: Texture[];
   printSizes: PrintSize[];
+  unlitFace: boolean;
 };
 
-function PolaroidImageBlockFlashCut({ textures, printSizes }: PolaroidImageBlockFlashCutProps) {
+function PolaroidImageBlockFlashCut({ textures, printSizes, unlitFace }: PolaroidImageBlockFlashCutProps) {
   const t = PRINT_THICKNESS;
   const cy = PHOTO_PLANE_Y - t / 2;
   const introO = useIntroStaggerFromOpacity();
   const op = introO !== undefined ? introO : 1;
   const fullOp = op >= 0.99;
 
-  const matRef = useRef<MeshStandardMaterial>(null);
+  const matRef = useRef<MeshStandardMaterial | MeshBasicMaterial>(null);
   const meshRef = useRef<Mesh>(null);
   useFlashCutSchedule(textures, matRef, meshRef, printSizes);
 
@@ -370,18 +396,30 @@ function PolaroidImageBlockFlashCut({ textures, printSizes }: PolaroidImageBlock
       <boxGeometry args={[1, t, 1]} />
       <meshStandardMaterial attach="material-0" {...EDGE_MAT} opacity={op} transparent={!fullOp} depthWrite={fullOp} />
       <meshStandardMaterial attach="material-1" {...EDGE_MAT} opacity={op} transparent={!fullOp} depthWrite={fullOp} />
-      <meshStandardMaterial
-        ref={matRef}
-        attach="material-2"
-        map={textures[0]}
-        roughness={0.8}
-        metalness={0}
-        toneMapped={false}
-        envMapIntensity={0.15}
-        opacity={op}
-        transparent={!fullOp}
-        depthWrite={fullOp}
-      />
+      {unlitFace ? (
+        <meshBasicMaterial
+          ref={matRef}
+          attach="material-2"
+          map={textures[0]}
+          toneMapped={false}
+          opacity={op}
+          transparent={!fullOp}
+          depthWrite={fullOp}
+        />
+      ) : (
+        <meshStandardMaterial
+          ref={matRef}
+          attach="material-2"
+          map={textures[0]}
+          roughness={0.8}
+          metalness={0}
+          toneMapped={false}
+          envMapIntensity={0.15}
+          opacity={op}
+          transparent={!fullOp}
+          depthWrite={fullOp}
+        />
+      )}
       <meshStandardMaterial attach="material-3" {...EDGE_MAT} color="#e6e3dc" opacity={op} transparent={!fullOp} depthWrite={fullOp} />
       <meshStandardMaterial attach="material-4" {...EDGE_MAT} opacity={op} transparent={!fullOp} depthWrite={fullOp} />
       <meshStandardMaterial attach="material-5" {...EDGE_MAT} opacity={op} transparent={!fullOp} depthWrite={fullOp} />
@@ -392,9 +430,10 @@ function PolaroidImageBlockFlashCut({ textures, printSizes }: PolaroidImageBlock
 type PolaroidWithFlashCutProps = {
   flashCutImages: string[];
   showFrame: boolean;
+  unlitFace: boolean;
 };
 
-function PolaroidWithFlashCut({ flashCutImages, showFrame }: PolaroidWithFlashCutProps) {
+function PolaroidWithFlashCut({ flashCutImages, showFrame, unlitFace }: PolaroidWithFlashCutProps) {
   const textures = useTexture(flashCutImages);
   const { controls } = useDeskControls();
   const s = controls.polaroidPrintScale;
@@ -416,7 +455,7 @@ function PolaroidWithFlashCut({ flashCutImages, showFrame }: PolaroidWithFlashCu
   return (
     <group>
       {showFrame ? <PolaroidFrame /> : null}
-      <PolaroidImageBlockFlashCut textures={textures} printSizes={printSizes} />
+      <PolaroidImageBlockFlashCut textures={textures} printSizes={printSizes} unlitFace={unlitFace} />
     </group>
   );
 }
@@ -432,6 +471,8 @@ export type PolaroidPhotoProps = {
   flashCutImages?: string[];
   /** White polaroid border mesh. Off by default; set `true` to bring it back. */
   showFrame?: boolean;
+  /** When true (default), the photo face ignores scene lights. Set false to restore PBR lighting. */
+  unlitFace?: boolean;
 };
 
 export function PolaroidPhoto({
@@ -439,20 +480,21 @@ export function PolaroidPhoto({
   imageUrl,
   flashCutImages,
   showFrame = false,
+  unlitFace = true,
 }: PolaroidPhotoProps) {
   if (imageUrl) {
     if (flashCutImages && flashCutImages.length > 0) {
-      return <PolaroidWithFlashCut flashCutImages={flashCutImages} showFrame={showFrame} />;
+      return <PolaroidWithFlashCut flashCutImages={flashCutImages} showFrame={showFrame} unlitFace={unlitFace} />;
     }
     if (isCanvasAnimatedImagePath(imageUrl)) {
       return (
-        <PolaroidWithCanvasImage imageUrl={imageUrl} showFrame={showFrame} />
+        <PolaroidWithCanvasImage imageUrl={imageUrl} showFrame={showFrame} unlitFace={unlitFace} />
       );
     }
-    return <PolaroidWithImageUrl imageUrl={imageUrl} showFrame={showFrame} />;
+    return <PolaroidWithImageUrl imageUrl={imageUrl} showFrame={showFrame} unlitFace={unlitFace} />;
   }
   if (palette) {
-    return <PolaroidWithGradient palette={palette} showFrame={showFrame} />;
+    return <PolaroidWithGradient palette={palette} showFrame={showFrame} unlitFace={unlitFace} />;
   }
   return null;
 }
