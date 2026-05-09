@@ -2,14 +2,12 @@
 
 /**
  * One **shared** `gsap.timeline()` for the whole page-load intro:
- *   1) Camera (`DeskLoadIntro`, ends at label **`afterCamera`**)
- *   2) Desk props — **`appendDeskPropsIntroImperative`** runs **once** after a readiness gate:
- *      every expected **`layoutId`** registered **or** **`HOME_DESK_INTRO_READINESS_TIMEOUT_MS`**
- *      elapsed (partial targets + warning). One props timeline is authored in **`desk-intro-imperative.ts`**
- *      (`timeline.add(child, staggerSec * index)`).
+ *   1) Camera + item intros — both live on the merged Theatre.js `Camera` sheet.
+ *      `home.ts` plays the sheet; item keyframes begin at position 12.609s.
+ *      At 12.609s, `setCameraAnimationComplete(true)` unblocks item opacity.
+ *   2) Each registered item's `onValuesChange` drives opacity + scale.
  *
- * Camera + props share **`masterTl`** for GSDevTools scrubbing (`home.ts` +
- * `desk-intro-timelines/desk-intro-imperative.ts`).
+ * The GSAP `masterTl` still holds the `afterCamera` label for GSDevTools scrubbing.
  */
 
 import gsap from "gsap";
@@ -26,8 +24,8 @@ import {
 import type { Object3D } from "three";
 import { useDeskSceneId } from "@/context/DeskSceneContext";
 import {
-  appendDeskPropsIntroImperative,
   HOME_DESK_INTRO_READINESS_TIMEOUT_MS,
+  WELCOME_HEADER_STAGGER_ID,
 } from "@/lib/desk-intro-timelines/desk-intro-imperative";
 import { HOME_DESK_LAYOUT_IDS } from "@/lib/desk-intro-timelines/home-intro-props";
 import {
@@ -41,6 +39,7 @@ import {
 } from "@/lib/gsap-desk-animation-registry";
 import type { DeskStaggerAfterCamera } from "@/lib/desk-layout";
 import { setObject3DTreeOpacity } from "@/lib/three-object-opacity";
+import { cameraSheet } from "@/lib/theatre-project";
 
 export type MasterIntroTimeline = ReturnType<typeof gsap.timeline>;
 
@@ -96,12 +95,16 @@ export function StaggerGsapProvider({ children }: { children: ReactNode }) {
   const readinessFallbackScheduledRef = useRef(false);
   const masterTlRef = useRef<MasterIntroTimeline | null>(null);
   const firstStaggerBatchPlaced = useRef(false);
+  /** Cleanup functions for Theatre.js `onValuesChange` subscriptions. */
+  const theatreUnsubsRef = useRef<Array<() => void>>([]);
 
   const getMasterIntroTimeline = useCallback(() => {
     return ensureMasterTl(masterTlRef);
   }, []);
 
   const resetMasterIntro = useCallback(() => {
+    for (const unsub of theatreUnsubsRef.current) unsub();
+    theatreUnsubsRef.current = [];
     for (const o of targets.current.values()) {
       setObject3DTreeOpacity(o, 1);
     }
@@ -122,19 +125,17 @@ export function StaggerGsapProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const runDeskPropsIntroOnce = useCallback(() => {
-    if (deskPropsIntroCompletedRef.current) {
-      return;
+    if (deskPropsIntroCompletedRef.current) return;
+    if (focusId == null || scene !== DESK_SCENE_HOME) return;
+
+    // Mark all targets animated so DraggableObject's useFrame stops zeroing opacity.
+    // welcome-header is driven by the Camera sheet WelcomeHeader object — mark it too.
+    // onValuesChange subscriptions (set up below) will now apply Theatre.js values.
+    // The merged Camera sheet is already playing from home.ts; item keyframes
+    // start at position 12.609s in that same sheet — no additional play() needed.
+    for (const [layoutId] of targets.current) {
+      animated.current.add(layoutId);
     }
-    if (focusId == null || scene !== DESK_SCENE_HOME) {
-      return;
-    }
-    const master = ensureMasterTl(masterTlRef);
-    appendDeskPropsIntroImperative(
-      master,
-      targets.current,
-      focusId,
-      animated.current,
-    );
     deskPropsIntroCompletedRef.current = true;
     firstStaggerBatchPlaced.current = true;
   }, [scene, focusId]);
@@ -145,6 +146,11 @@ export function StaggerGsapProvider({ children }: { children: ReactNode }) {
         return;
       }
       targets.current.set(id, object);
+      // welcome-header opacity is driven by Theatre.js from sequence position 0;
+      // pre-mark as animated so DraggableObject's frame loop never overrides it.
+      if (id === WELCOME_HEADER_STAGGER_ID) {
+        animated.current.add(id);
+      }
       setRegistryVersion((v) => v + 1);
     },
     [],
@@ -164,6 +170,33 @@ export function StaggerGsapProvider({ children }: { children: ReactNode }) {
   const getStaggerTarget = useCallback((id: string) => {
     return targets.current.get(id);
   }, []);
+
+  // Persistent Theatre.js subscriptions — keep scene in sync with studio scrubbing.
+  // Objects live on the merged Camera sheet; item keyframes begin at 12.609s.
+  useEffect(() => {
+    if (scene !== DESK_SCENE_HOME || targets.current.size === 0) return;
+
+    const unsubs: Array<() => void> = [];
+    for (const [layoutId, obj] of targets.current) {
+      if (layoutId === WELCOME_HEADER_STAGGER_ID) continue;
+      const theatreObj = cameraSheet.object(
+        layoutId,
+        { opacity: 0, scale: 0.9 },
+        { reconfigure: true },
+      );
+      unsubs.push(
+        theatreObj.onValuesChange(({ opacity, scale }) => {
+          if (!deskPropsIntroCompletedRef.current) return;
+          setObject3DTreeOpacity(obj, opacity);
+          obj.scale.setScalar(scale);
+        }),
+      );
+    }
+
+    return () => {
+      for (const unsub of unsubs) unsub();
+    };
+  }, [registryVersion, scene]);
 
   useEffect(() => {
     if (!cfg || focusId == null || !cameraAnimationComplete || scene !== DESK_SCENE_HOME) {

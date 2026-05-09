@@ -1,0 +1,2227 @@
+{
+  "definitionVersion": "0.4.0",
+  "revisionHistory": [],
+  "sheetsById": {
+    "Camera": {
+      "staticOverrides": {
+        "byObject": {}
+      },
+      "sequence": {
+        "subUnitsPerUnit": 30,
+        "length": 5.3,
+        "tracksByObject": {
+          "CameraRig": {
+            "trackData": {
+              "t001_CameraRig_zoom": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "CameraRig / zoom",
+                "keyframes": [
+                  {
+                    "id": "kf00001",
+                    "position": 0,
+                    "connectedRight": true,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 1.65
+                  },
+                  {
+                    "id": "kf00002",
+                    "position": 5,
+                    "connectedRight": false,
+                    "handles": [
+                      0.42,
+                      0,
+                      0.42,
+                      1
+                    ],
+                    "type": "bezier",
+                    "value": 1.65
+                  },
+                  {
+                    "id": "kf00003",
+                    "position": 5.3,
+                    "connectedRight": false,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 1
+                  }
+                ]
+              },
+              "t002_CameraRig_y": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "CameraRig / y",
+                "keyframes": [
+                  {
+                    "id": "kf00004",
+                    "position": 0,
+                    "connectedRight": true,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 2.2
+                  },
+                  {
+                    "id": "kf00005",
+                    "position": 5,
+                    "connectedRight": false,
+                    "handles": [
+                      0.42,
+                      0,
+                      0.42,
+                      1
+                    ],
+                    "type": "bezier",
+                    "value": 2.2
+                  },
+                  {
+                    "id": "kf00006",
+                    "position": 5.3,
+                    "connectedRight": false,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 4
+                  }
+                ]
+              }
+            },
+            "trackIdByPropPath": {
+              "zoom": "t001_CameraRig_zoom",
+              "y": "t002_CameraRig_y"
+            }
+          },
+          "WelcomeHeader": {
+            "trackData": {
+              "t003_WelcomeHeader_opacity": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "WelcomeHeader / opacity",
+                "keyframes": [
+                  {
+                    "id": "kf00007",
+                    "position": 0,
+                    "connectedRight": true,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 0
+                  },
+                  {
+                    "id": "kf00008",
+                    "position": 4.5,
+                    "connectedRight": false,
+                    "handles": [
+                      0,
+                      0,
+                      0.42,
+                      1
+                    ],
+                    "type": "bezier",
+                    "value": 0
+                  },
+                  {
+                    "id": "kf00009",
+                    "position": 5,
+                    "connectedRight": false,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 0.98
+                  }
+                ]
+              }
+            },
+            "trackIdByPropPath": {
+              "opacity": "t003_WelcomeHeader_opacity"
+            }
+          }
+        }
+      }
+    },
+    "ItemIntros": {
+      "staticOverrides": {
+        "byObject": {}
+      },
+      "sequence": {
+        "subUnitsPerUnit": 30,
+        "length": 5.8999999999999995,
+        "tracksByObject": {
+          "polaroid-raymond": {
+            "trackData": {
+              "t004_polaroid_raymond_opacity": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "polaroid-raymond / opacity",
+                "keyframes": [
+                  {
+                    "id": "kf00010",
+                    "position": 0,
+                    "connectedRight": false,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 1
+                  }
+                ]
+              },
+              "t005_polaroid_raymond_scale": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "polaroid-raymond / scale",
+                "keyframes": [
+                  {
+                    "id": "kf00011",
+                    "position": 0,
+                    "connectedRight": true,
+                    "handles": [
+                      0,
+                      0,
+                      0.42,
+                      1
+                    ],
+                    "type": "bezier",
+                    "value": 0.9
+                  },
+                  {
+                    "id": "kf00012",
+                    "position": 0.6,
+                    "connectedRight": false,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 1
+                  }
+                ]
+              }
+            },
+            "trackIdByPropPath": {
+              "opacity": "t004_polaroid_raymond_opacity",
+              "scale": "t005_polaroid_raymond_scale"
+            }
+          },
+          "card-0": {
+            "trackData": {
+              "t006_card_0_opacity": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "card-0 / opacity",
+                "keyframes": [
+                  {
+                    "id": "kf00013",
+                    "position": 0,
+                    "connectedRight": true,
+                    "handles": [
+                      0.34,
+                      1.56,
+                      0.36,
+                      1
+                    ],
+                    "type": "bezier",
+                    "value": 0
+                  },
+                  {
+                    "id": "kf00014",
+                    "position": 0.6,
+                    "connectedRight": false,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 1
+                  }
+                ]
+              },
+              "t007_card_0_scale": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "card-0 / scale",
+                "keyframes": [
+                  {
+                    "id": "kf00015",
+                    "position": 0,
+                    "connectedRight": true,
+                    "handles": [
+                      0.34,
+                      1.56,
+                      0.36,
+                      1
+                    ],
+                    "type": "bezier",
+                    "value": 0.9
+                  },
+                  {
+                    "id": "kf00016",
+                    "position": 0.6,
+                    "connectedRight": false,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 1
+                  }
+                ]
+              }
+            },
+            "trackIdByPropPath": {
+              "opacity": "t006_card_0_opacity",
+              "scale": "t007_card_0_scale"
+            }
+          },
+          "card-1": {
+            "trackData": {
+              "t008_card_1_opacity": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "card-1 / opacity",
+                "keyframes": [
+                  {
+                    "id": "kf00017",
+                    "position": 0.2,
+                    "connectedRight": true,
+                    "handles": [
+                      0.34,
+                      1.56,
+                      0.36,
+                      1
+                    ],
+                    "type": "bezier",
+                    "value": 0
+                  },
+                  {
+                    "id": "kf00018",
+                    "position": 0.8,
+                    "connectedRight": false,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 1
+                  }
+                ]
+              },
+              "t009_card_1_scale": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "card-1 / scale",
+                "keyframes": [
+                  {
+                    "id": "kf00019",
+                    "position": 0.2,
+                    "connectedRight": true,
+                    "handles": [
+                      0.34,
+                      1.56,
+                      0.36,
+                      1
+                    ],
+                    "type": "bezier",
+                    "value": 0.9
+                  },
+                  {
+                    "id": "kf00020",
+                    "position": 0.8,
+                    "connectedRight": false,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 1
+                  }
+                ]
+              }
+            },
+            "trackIdByPropPath": {
+              "opacity": "t008_card_1_opacity",
+              "scale": "t009_card_1_scale"
+            }
+          },
+          "card-2": {
+            "trackData": {
+              "t010_card_2_opacity": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "card-2 / opacity",
+                "keyframes": [
+                  {
+                    "id": "kf00021",
+                    "position": 0.4,
+                    "connectedRight": true,
+                    "handles": [
+                      0.34,
+                      1.56,
+                      0.36,
+                      1
+                    ],
+                    "type": "bezier",
+                    "value": 0
+                  },
+                  {
+                    "id": "kf00022",
+                    "position": 1,
+                    "connectedRight": false,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 1
+                  }
+                ]
+              },
+              "t011_card_2_scale": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "card-2 / scale",
+                "keyframes": [
+                  {
+                    "id": "kf00023",
+                    "position": 0.4,
+                    "connectedRight": true,
+                    "handles": [
+                      0.34,
+                      1.56,
+                      0.36,
+                      1
+                    ],
+                    "type": "bezier",
+                    "value": 0.9
+                  },
+                  {
+                    "id": "kf00024",
+                    "position": 1,
+                    "connectedRight": false,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 1
+                  }
+                ]
+              }
+            },
+            "trackIdByPropPath": {
+              "opacity": "t010_card_2_opacity",
+              "scale": "t011_card_2_scale"
+            }
+          },
+          "polaroid-interface-study": {
+            "trackData": {
+              "t012_polaroid_interface_study_opaci": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "polaroid-interface-study / opacity",
+                "keyframes": [
+                  {
+                    "id": "kf00025",
+                    "position": 0.6,
+                    "connectedRight": true,
+                    "handles": [
+                      0.34,
+                      1.56,
+                      0.36,
+                      1
+                    ],
+                    "type": "bezier",
+                    "value": 0
+                  },
+                  {
+                    "id": "kf00026",
+                    "position": 1.2,
+                    "connectedRight": false,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 1
+                  }
+                ]
+              },
+              "t013_polaroid_interface_study_scale": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "polaroid-interface-study / scale",
+                "keyframes": [
+                  {
+                    "id": "kf00027",
+                    "position": 0.6,
+                    "connectedRight": true,
+                    "handles": [
+                      0.34,
+                      1.56,
+                      0.36,
+                      1
+                    ],
+                    "type": "bezier",
+                    "value": 0.9
+                  },
+                  {
+                    "id": "kf00028",
+                    "position": 1.2,
+                    "connectedRight": false,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 1
+                  }
+                ]
+              }
+            },
+            "trackIdByPropPath": {
+              "opacity": "t012_polaroid_interface_study_opaci",
+              "scale": "t013_polaroid_interface_study_scale"
+            }
+          },
+          "polaroid-prototype-desk": {
+            "trackData": {
+              "t014_polaroid_prototype_desk_opacit": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "polaroid-prototype-desk / opacity",
+                "keyframes": [
+                  {
+                    "id": "kf00029",
+                    "position": 0.8,
+                    "connectedRight": true,
+                    "handles": [
+                      0.34,
+                      1.56,
+                      0.36,
+                      1
+                    ],
+                    "type": "bezier",
+                    "value": 0
+                  },
+                  {
+                    "id": "kf00030",
+                    "position": 1.4,
+                    "connectedRight": false,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 1
+                  }
+                ]
+              },
+              "t015_polaroid_prototype_desk_scale": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "polaroid-prototype-desk / scale",
+                "keyframes": [
+                  {
+                    "id": "kf00031",
+                    "position": 0.8,
+                    "connectedRight": true,
+                    "handles": [
+                      0.34,
+                      1.56,
+                      0.36,
+                      1
+                    ],
+                    "type": "bezier",
+                    "value": 0.9
+                  },
+                  {
+                    "id": "kf00032",
+                    "position": 1.4,
+                    "connectedRight": false,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 1
+                  }
+                ]
+              }
+            },
+            "trackIdByPropPath": {
+              "opacity": "t014_polaroid_prototype_desk_opacit",
+              "scale": "t015_polaroid_prototype_desk_scale"
+            }
+          },
+          "polaroid-launch-notes": {
+            "trackData": {
+              "t016_polaroid_launch_notes_opacity": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "polaroid-launch-notes / opacity",
+                "keyframes": [
+                  {
+                    "id": "kf00033",
+                    "position": 1,
+                    "connectedRight": true,
+                    "handles": [
+                      0.34,
+                      1.56,
+                      0.36,
+                      1
+                    ],
+                    "type": "bezier",
+                    "value": 0
+                  },
+                  {
+                    "id": "kf00034",
+                    "position": 1.6,
+                    "connectedRight": false,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 1
+                  }
+                ]
+              },
+              "t017_polaroid_launch_notes_scale": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "polaroid-launch-notes / scale",
+                "keyframes": [
+                  {
+                    "id": "kf00035",
+                    "position": 1,
+                    "connectedRight": true,
+                    "handles": [
+                      0.34,
+                      1.56,
+                      0.36,
+                      1
+                    ],
+                    "type": "bezier",
+                    "value": 0.9
+                  },
+                  {
+                    "id": "kf00036",
+                    "position": 1.6,
+                    "connectedRight": false,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 1
+                  }
+                ]
+              }
+            },
+            "trackIdByPropPath": {
+              "opacity": "t016_polaroid_launch_notes_opacity",
+              "scale": "t017_polaroid_launch_notes_scale"
+            }
+          },
+          "polaroid-archive-01": {
+            "trackData": {
+              "t018_polaroid_archive_01_opacity": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "polaroid-archive-01 / opacity",
+                "keyframes": [
+                  {
+                    "id": "kf00037",
+                    "position": 1.2,
+                    "connectedRight": true,
+                    "handles": [
+                      0.34,
+                      1.56,
+                      0.36,
+                      1
+                    ],
+                    "type": "bezier",
+                    "value": 0
+                  },
+                  {
+                    "id": "kf00038",
+                    "position": 1.7999999999999998,
+                    "connectedRight": false,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 1
+                  }
+                ]
+              },
+              "t019_polaroid_archive_01_scale": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "polaroid-archive-01 / scale",
+                "keyframes": [
+                  {
+                    "id": "kf00039",
+                    "position": 1.2,
+                    "connectedRight": true,
+                    "handles": [
+                      0.34,
+                      1.56,
+                      0.36,
+                      1
+                    ],
+                    "type": "bezier",
+                    "value": 0.9
+                  },
+                  {
+                    "id": "kf00040",
+                    "position": 1.7999999999999998,
+                    "connectedRight": false,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 1
+                  }
+                ]
+              }
+            },
+            "trackIdByPropPath": {
+              "opacity": "t018_polaroid_archive_01_opacity",
+              "scale": "t019_polaroid_archive_01_scale"
+            }
+          },
+          "polaroid-archive-02": {
+            "trackData": {
+              "t020_polaroid_archive_02_opacity": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "polaroid-archive-02 / opacity",
+                "keyframes": [
+                  {
+                    "id": "kf00041",
+                    "position": 1.4,
+                    "connectedRight": true,
+                    "handles": [
+                      0.34,
+                      1.56,
+                      0.36,
+                      1
+                    ],
+                    "type": "bezier",
+                    "value": 0
+                  },
+                  {
+                    "id": "kf00042",
+                    "position": 2,
+                    "connectedRight": false,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 1
+                  }
+                ]
+              },
+              "t021_polaroid_archive_02_scale": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "polaroid-archive-02 / scale",
+                "keyframes": [
+                  {
+                    "id": "kf00043",
+                    "position": 1.4,
+                    "connectedRight": true,
+                    "handles": [
+                      0.34,
+                      1.56,
+                      0.36,
+                      1
+                    ],
+                    "type": "bezier",
+                    "value": 0.9
+                  },
+                  {
+                    "id": "kf00044",
+                    "position": 2,
+                    "connectedRight": false,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 1
+                  }
+                ]
+              }
+            },
+            "trackIdByPropPath": {
+              "opacity": "t020_polaroid_archive_02_opacity",
+              "scale": "t021_polaroid_archive_02_scale"
+            }
+          },
+          "polaroid-archive-03": {
+            "trackData": {
+              "t022_polaroid_archive_03_opacity": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "polaroid-archive-03 / opacity",
+                "keyframes": [
+                  {
+                    "id": "kf00045",
+                    "position": 1.6,
+                    "connectedRight": true,
+                    "handles": [
+                      0.34,
+                      1.56,
+                      0.36,
+                      1
+                    ],
+                    "type": "bezier",
+                    "value": 0
+                  },
+                  {
+                    "id": "kf00046",
+                    "position": 2.2,
+                    "connectedRight": false,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 1
+                  }
+                ]
+              },
+              "t023_polaroid_archive_03_scale": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "polaroid-archive-03 / scale",
+                "keyframes": [
+                  {
+                    "id": "kf00047",
+                    "position": 1.6,
+                    "connectedRight": true,
+                    "handles": [
+                      0.34,
+                      1.56,
+                      0.36,
+                      1
+                    ],
+                    "type": "bezier",
+                    "value": 0.9
+                  },
+                  {
+                    "id": "kf00048",
+                    "position": 2.2,
+                    "connectedRight": false,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 1
+                  }
+                ]
+              }
+            },
+            "trackIdByPropPath": {
+              "opacity": "t022_polaroid_archive_03_opacity",
+              "scale": "t023_polaroid_archive_03_scale"
+            }
+          },
+          "polaroid-archive-04": {
+            "trackData": {
+              "t024_polaroid_archive_04_opacity": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "polaroid-archive-04 / opacity",
+                "keyframes": [
+                  {
+                    "id": "kf00049",
+                    "position": 1.8,
+                    "connectedRight": true,
+                    "handles": [
+                      0.34,
+                      1.56,
+                      0.36,
+                      1
+                    ],
+                    "type": "bezier",
+                    "value": 0
+                  },
+                  {
+                    "id": "kf00050",
+                    "position": 2.4,
+                    "connectedRight": false,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 1
+                  }
+                ]
+              },
+              "t025_polaroid_archive_04_scale": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "polaroid-archive-04 / scale",
+                "keyframes": [
+                  {
+                    "id": "kf00051",
+                    "position": 1.8,
+                    "connectedRight": true,
+                    "handles": [
+                      0.34,
+                      1.56,
+                      0.36,
+                      1
+                    ],
+                    "type": "bezier",
+                    "value": 0.9
+                  },
+                  {
+                    "id": "kf00052",
+                    "position": 2.4,
+                    "connectedRight": false,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 1
+                  }
+                ]
+              }
+            },
+            "trackIdByPropPath": {
+              "opacity": "t024_polaroid_archive_04_opacity",
+              "scale": "t025_polaroid_archive_04_scale"
+            }
+          },
+          "polaroid-archive-05": {
+            "trackData": {
+              "t026_polaroid_archive_05_opacity": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "polaroid-archive-05 / opacity",
+                "keyframes": [
+                  {
+                    "id": "kf00053",
+                    "position": 2,
+                    "connectedRight": true,
+                    "handles": [
+                      0.34,
+                      1.56,
+                      0.36,
+                      1
+                    ],
+                    "type": "bezier",
+                    "value": 0
+                  },
+                  {
+                    "id": "kf00054",
+                    "position": 2.6,
+                    "connectedRight": false,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 1
+                  }
+                ]
+              },
+              "t027_polaroid_archive_05_scale": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "polaroid-archive-05 / scale",
+                "keyframes": [
+                  {
+                    "id": "kf00055",
+                    "position": 2,
+                    "connectedRight": true,
+                    "handles": [
+                      0.34,
+                      1.56,
+                      0.36,
+                      1
+                    ],
+                    "type": "bezier",
+                    "value": 0.9
+                  },
+                  {
+                    "id": "kf00056",
+                    "position": 2.6,
+                    "connectedRight": false,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 1
+                  }
+                ]
+              }
+            },
+            "trackIdByPropPath": {
+              "opacity": "t026_polaroid_archive_05_opacity",
+              "scale": "t027_polaroid_archive_05_scale"
+            }
+          },
+          "polaroid-archive-06": {
+            "trackData": {
+              "t028_polaroid_archive_06_opacity": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "polaroid-archive-06 / opacity",
+                "keyframes": [
+                  {
+                    "id": "kf00057",
+                    "position": 2.2,
+                    "connectedRight": true,
+                    "handles": [
+                      0.34,
+                      1.56,
+                      0.36,
+                      1
+                    ],
+                    "type": "bezier",
+                    "value": 0
+                  },
+                  {
+                    "id": "kf00058",
+                    "position": 2.8000000000000003,
+                    "connectedRight": false,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 1
+                  }
+                ]
+              },
+              "t029_polaroid_archive_06_scale": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "polaroid-archive-06 / scale",
+                "keyframes": [
+                  {
+                    "id": "kf00059",
+                    "position": 2.2,
+                    "connectedRight": true,
+                    "handles": [
+                      0.34,
+                      1.56,
+                      0.36,
+                      1
+                    ],
+                    "type": "bezier",
+                    "value": 0.9
+                  },
+                  {
+                    "id": "kf00060",
+                    "position": 2.8000000000000003,
+                    "connectedRight": false,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 1
+                  }
+                ]
+              }
+            },
+            "trackIdByPropPath": {
+              "opacity": "t028_polaroid_archive_06_opacity",
+              "scale": "t029_polaroid_archive_06_scale"
+            }
+          },
+          "polaroid-archive-07": {
+            "trackData": {
+              "t030_polaroid_archive_07_opacity": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "polaroid-archive-07 / opacity",
+                "keyframes": [
+                  {
+                    "id": "kf00061",
+                    "position": 2.4,
+                    "connectedRight": true,
+                    "handles": [
+                      0.34,
+                      1.56,
+                      0.36,
+                      1
+                    ],
+                    "type": "bezier",
+                    "value": 0
+                  },
+                  {
+                    "id": "kf00062",
+                    "position": 3,
+                    "connectedRight": false,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 1
+                  }
+                ]
+              },
+              "t031_polaroid_archive_07_scale": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "polaroid-archive-07 / scale",
+                "keyframes": [
+                  {
+                    "id": "kf00063",
+                    "position": 2.4,
+                    "connectedRight": true,
+                    "handles": [
+                      0.34,
+                      1.56,
+                      0.36,
+                      1
+                    ],
+                    "type": "bezier",
+                    "value": 0.9
+                  },
+                  {
+                    "id": "kf00064",
+                    "position": 3,
+                    "connectedRight": false,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 1
+                  }
+                ]
+              }
+            },
+            "trackIdByPropPath": {
+              "opacity": "t030_polaroid_archive_07_opacity",
+              "scale": "t031_polaroid_archive_07_scale"
+            }
+          },
+          "polaroid-archive-08": {
+            "trackData": {
+              "t032_polaroid_archive_08_opacity": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "polaroid-archive-08 / opacity",
+                "keyframes": [
+                  {
+                    "id": "kf00065",
+                    "position": 2.6,
+                    "connectedRight": true,
+                    "handles": [
+                      0.34,
+                      1.56,
+                      0.36,
+                      1
+                    ],
+                    "type": "bezier",
+                    "value": 0
+                  },
+                  {
+                    "id": "kf00066",
+                    "position": 3.2,
+                    "connectedRight": false,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 1
+                  }
+                ]
+              },
+              "t033_polaroid_archive_08_scale": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "polaroid-archive-08 / scale",
+                "keyframes": [
+                  {
+                    "id": "kf00067",
+                    "position": 2.6,
+                    "connectedRight": true,
+                    "handles": [
+                      0.34,
+                      1.56,
+                      0.36,
+                      1
+                    ],
+                    "type": "bezier",
+                    "value": 0.9
+                  },
+                  {
+                    "id": "kf00068",
+                    "position": 3.2,
+                    "connectedRight": false,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 1
+                  }
+                ]
+              }
+            },
+            "trackIdByPropPath": {
+              "opacity": "t032_polaroid_archive_08_opacity",
+              "scale": "t033_polaroid_archive_08_scale"
+            }
+          },
+          "polaroid-archive-09": {
+            "trackData": {
+              "t034_polaroid_archive_09_opacity": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "polaroid-archive-09 / opacity",
+                "keyframes": [
+                  {
+                    "id": "kf00069",
+                    "position": 2.8,
+                    "connectedRight": true,
+                    "handles": [
+                      0.34,
+                      1.56,
+                      0.36,
+                      1
+                    ],
+                    "type": "bezier",
+                    "value": 0
+                  },
+                  {
+                    "id": "kf00070",
+                    "position": 3.4,
+                    "connectedRight": false,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 1
+                  }
+                ]
+              },
+              "t035_polaroid_archive_09_scale": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "polaroid-archive-09 / scale",
+                "keyframes": [
+                  {
+                    "id": "kf00071",
+                    "position": 2.8,
+                    "connectedRight": true,
+                    "handles": [
+                      0.34,
+                      1.56,
+                      0.36,
+                      1
+                    ],
+                    "type": "bezier",
+                    "value": 0.9
+                  },
+                  {
+                    "id": "kf00072",
+                    "position": 3.4,
+                    "connectedRight": false,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 1
+                  }
+                ]
+              }
+            },
+            "trackIdByPropPath": {
+              "opacity": "t034_polaroid_archive_09_opacity",
+              "scale": "t035_polaroid_archive_09_scale"
+            }
+          },
+          "polaroid-archive-10": {
+            "trackData": {
+              "t036_polaroid_archive_10_opacity": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "polaroid-archive-10 / opacity",
+                "keyframes": [
+                  {
+                    "id": "kf00073",
+                    "position": 3,
+                    "connectedRight": true,
+                    "handles": [
+                      0.34,
+                      1.56,
+                      0.36,
+                      1
+                    ],
+                    "type": "bezier",
+                    "value": 0
+                  },
+                  {
+                    "id": "kf00074",
+                    "position": 3.6,
+                    "connectedRight": false,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 1
+                  }
+                ]
+              },
+              "t037_polaroid_archive_10_scale": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "polaroid-archive-10 / scale",
+                "keyframes": [
+                  {
+                    "id": "kf00075",
+                    "position": 3,
+                    "connectedRight": true,
+                    "handles": [
+                      0.34,
+                      1.56,
+                      0.36,
+                      1
+                    ],
+                    "type": "bezier",
+                    "value": 0.9
+                  },
+                  {
+                    "id": "kf00076",
+                    "position": 3.6,
+                    "connectedRight": false,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 1
+                  }
+                ]
+              }
+            },
+            "trackIdByPropPath": {
+              "opacity": "t036_polaroid_archive_10_opacity",
+              "scale": "t037_polaroid_archive_10_scale"
+            }
+          },
+          "polaroid-archive-11": {
+            "trackData": {
+              "t038_polaroid_archive_11_opacity": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "polaroid-archive-11 / opacity",
+                "keyframes": [
+                  {
+                    "id": "kf00077",
+                    "position": 3.2,
+                    "connectedRight": true,
+                    "handles": [
+                      0.34,
+                      1.56,
+                      0.36,
+                      1
+                    ],
+                    "type": "bezier",
+                    "value": 0
+                  },
+                  {
+                    "id": "kf00078",
+                    "position": 3.8000000000000003,
+                    "connectedRight": false,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 1
+                  }
+                ]
+              },
+              "t039_polaroid_archive_11_scale": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "polaroid-archive-11 / scale",
+                "keyframes": [
+                  {
+                    "id": "kf00079",
+                    "position": 3.2,
+                    "connectedRight": true,
+                    "handles": [
+                      0.34,
+                      1.56,
+                      0.36,
+                      1
+                    ],
+                    "type": "bezier",
+                    "value": 0.9
+                  },
+                  {
+                    "id": "kf00080",
+                    "position": 3.8000000000000003,
+                    "connectedRight": false,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 1
+                  }
+                ]
+              }
+            },
+            "trackIdByPropPath": {
+              "opacity": "t038_polaroid_archive_11_opacity",
+              "scale": "t039_polaroid_archive_11_scale"
+            }
+          },
+          "polaroid-archive-12": {
+            "trackData": {
+              "t040_polaroid_archive_12_opacity": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "polaroid-archive-12 / opacity",
+                "keyframes": [
+                  {
+                    "id": "kf00081",
+                    "position": 3.4,
+                    "connectedRight": true,
+                    "handles": [
+                      0.34,
+                      1.56,
+                      0.36,
+                      1
+                    ],
+                    "type": "bezier",
+                    "value": 0
+                  },
+                  {
+                    "id": "kf00082",
+                    "position": 4,
+                    "connectedRight": false,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 1
+                  }
+                ]
+              },
+              "t041_polaroid_archive_12_scale": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "polaroid-archive-12 / scale",
+                "keyframes": [
+                  {
+                    "id": "kf00083",
+                    "position": 3.4,
+                    "connectedRight": true,
+                    "handles": [
+                      0.34,
+                      1.56,
+                      0.36,
+                      1
+                    ],
+                    "type": "bezier",
+                    "value": 0.9
+                  },
+                  {
+                    "id": "kf00084",
+                    "position": 4,
+                    "connectedRight": false,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 1
+                  }
+                ]
+              }
+            },
+            "trackIdByPropPath": {
+              "opacity": "t040_polaroid_archive_12_opacity",
+              "scale": "t041_polaroid_archive_12_scale"
+            }
+          },
+          "polaroid-archive-13": {
+            "trackData": {
+              "t042_polaroid_archive_13_opacity": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "polaroid-archive-13 / opacity",
+                "keyframes": [
+                  {
+                    "id": "kf00085",
+                    "position": 3.6,
+                    "connectedRight": true,
+                    "handles": [
+                      0.34,
+                      1.56,
+                      0.36,
+                      1
+                    ],
+                    "type": "bezier",
+                    "value": 0
+                  },
+                  {
+                    "id": "kf00086",
+                    "position": 4.2,
+                    "connectedRight": false,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 1
+                  }
+                ]
+              },
+              "t043_polaroid_archive_13_scale": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "polaroid-archive-13 / scale",
+                "keyframes": [
+                  {
+                    "id": "kf00087",
+                    "position": 3.6,
+                    "connectedRight": true,
+                    "handles": [
+                      0.34,
+                      1.56,
+                      0.36,
+                      1
+                    ],
+                    "type": "bezier",
+                    "value": 0.9
+                  },
+                  {
+                    "id": "kf00088",
+                    "position": 4.2,
+                    "connectedRight": false,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 1
+                  }
+                ]
+              }
+            },
+            "trackIdByPropPath": {
+              "opacity": "t042_polaroid_archive_13_opacity",
+              "scale": "t043_polaroid_archive_13_scale"
+            }
+          },
+          "polaroid-archive-14": {
+            "trackData": {
+              "t044_polaroid_archive_14_opacity": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "polaroid-archive-14 / opacity",
+                "keyframes": [
+                  {
+                    "id": "kf00089",
+                    "position": 3.8,
+                    "connectedRight": true,
+                    "handles": [
+                      0.34,
+                      1.56,
+                      0.36,
+                      1
+                    ],
+                    "type": "bezier",
+                    "value": 0
+                  },
+                  {
+                    "id": "kf00090",
+                    "position": 4.3999999999999995,
+                    "connectedRight": false,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 1
+                  }
+                ]
+              },
+              "t045_polaroid_archive_14_scale": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "polaroid-archive-14 / scale",
+                "keyframes": [
+                  {
+                    "id": "kf00091",
+                    "position": 3.8,
+                    "connectedRight": true,
+                    "handles": [
+                      0.34,
+                      1.56,
+                      0.36,
+                      1
+                    ],
+                    "type": "bezier",
+                    "value": 0.9
+                  },
+                  {
+                    "id": "kf00092",
+                    "position": 4.3999999999999995,
+                    "connectedRight": false,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 1
+                  }
+                ]
+              }
+            },
+            "trackIdByPropPath": {
+              "opacity": "t044_polaroid_archive_14_opacity",
+              "scale": "t045_polaroid_archive_14_scale"
+            }
+          },
+          "polaroid-archive-15": {
+            "trackData": {
+              "t046_polaroid_archive_15_opacity": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "polaroid-archive-15 / opacity",
+                "keyframes": [
+                  {
+                    "id": "kf00093",
+                    "position": 4,
+                    "connectedRight": true,
+                    "handles": [
+                      0.34,
+                      1.56,
+                      0.36,
+                      1
+                    ],
+                    "type": "bezier",
+                    "value": 0
+                  },
+                  {
+                    "id": "kf00094",
+                    "position": 4.6,
+                    "connectedRight": false,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 1
+                  }
+                ]
+              },
+              "t047_polaroid_archive_15_scale": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "polaroid-archive-15 / scale",
+                "keyframes": [
+                  {
+                    "id": "kf00095",
+                    "position": 4,
+                    "connectedRight": true,
+                    "handles": [
+                      0.34,
+                      1.56,
+                      0.36,
+                      1
+                    ],
+                    "type": "bezier",
+                    "value": 0.9
+                  },
+                  {
+                    "id": "kf00096",
+                    "position": 4.6,
+                    "connectedRight": false,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 1
+                  }
+                ]
+              }
+            },
+            "trackIdByPropPath": {
+              "opacity": "t046_polaroid_archive_15_opacity",
+              "scale": "t047_polaroid_archive_15_scale"
+            }
+          },
+          "home-desk-video": {
+            "trackData": {
+              "t048_home_desk_video_opacity": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "home-desk-video / opacity",
+                "keyframes": [
+                  {
+                    "id": "kf00097",
+                    "position": 4.2,
+                    "connectedRight": true,
+                    "handles": [
+                      0.34,
+                      1.56,
+                      0.36,
+                      1
+                    ],
+                    "type": "bezier",
+                    "value": 0
+                  },
+                  {
+                    "id": "kf00098",
+                    "position": 4.8,
+                    "connectedRight": false,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 1
+                  }
+                ]
+              },
+              "t049_home_desk_video_scale": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "home-desk-video / scale",
+                "keyframes": [
+                  {
+                    "id": "kf00099",
+                    "position": 4.2,
+                    "connectedRight": true,
+                    "handles": [
+                      0.34,
+                      1.56,
+                      0.36,
+                      1
+                    ],
+                    "type": "bezier",
+                    "value": 0.9
+                  },
+                  {
+                    "id": "kf00100",
+                    "position": 4.8,
+                    "connectedRight": false,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 1
+                  }
+                ]
+              }
+            },
+            "trackIdByPropPath": {
+              "opacity": "t048_home_desk_video_opacity",
+              "scale": "t049_home_desk_video_scale"
+            }
+          },
+          "iphone": {
+            "trackData": {
+              "t050_iphone_opacity": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "iphone / opacity",
+                "keyframes": [
+                  {
+                    "id": "kf00101",
+                    "position": 4.4,
+                    "connectedRight": true,
+                    "handles": [
+                      0.34,
+                      1.56,
+                      0.36,
+                      1
+                    ],
+                    "type": "bezier",
+                    "value": 0
+                  },
+                  {
+                    "id": "kf00102",
+                    "position": 5,
+                    "connectedRight": false,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 1
+                  }
+                ]
+              },
+              "t051_iphone_scale": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "iphone / scale",
+                "keyframes": [
+                  {
+                    "id": "kf00103",
+                    "position": 4.4,
+                    "connectedRight": true,
+                    "handles": [
+                      0.34,
+                      1.56,
+                      0.36,
+                      1
+                    ],
+                    "type": "bezier",
+                    "value": 0.9
+                  },
+                  {
+                    "id": "kf00104",
+                    "position": 5,
+                    "connectedRight": false,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 1
+                  }
+                ]
+              }
+            },
+            "trackIdByPropPath": {
+              "opacity": "t050_iphone_opacity",
+              "scale": "t051_iphone_scale"
+            }
+          },
+          "jitter-text-0": {
+            "trackData": {
+              "t052_jitter_text_0_opacity": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "jitter-text-0 / opacity",
+                "keyframes": [
+                  {
+                    "id": "kf00105",
+                    "position": 4.6,
+                    "connectedRight": true,
+                    "handles": [
+                      0.34,
+                      1.56,
+                      0.36,
+                      1
+                    ],
+                    "type": "bezier",
+                    "value": 0
+                  },
+                  {
+                    "id": "kf00106",
+                    "position": 5.199999999999999,
+                    "connectedRight": false,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 1
+                  }
+                ]
+              },
+              "t053_jitter_text_0_scale": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "jitter-text-0 / scale",
+                "keyframes": [
+                  {
+                    "id": "kf00107",
+                    "position": 4.6,
+                    "connectedRight": true,
+                    "handles": [
+                      0.34,
+                      1.56,
+                      0.36,
+                      1
+                    ],
+                    "type": "bezier",
+                    "value": 0.9
+                  },
+                  {
+                    "id": "kf00108",
+                    "position": 5.199999999999999,
+                    "connectedRight": false,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 1
+                  }
+                ]
+              }
+            },
+            "trackIdByPropPath": {
+              "opacity": "t052_jitter_text_0_opacity",
+              "scale": "t053_jitter_text_0_scale"
+            }
+          },
+          "jitter-text-1": {
+            "trackData": {
+              "t054_jitter_text_1_opacity": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "jitter-text-1 / opacity",
+                "keyframes": [
+                  {
+                    "id": "kf00109",
+                    "position": 4.8,
+                    "connectedRight": true,
+                    "handles": [
+                      0.34,
+                      1.56,
+                      0.36,
+                      1
+                    ],
+                    "type": "bezier",
+                    "value": 0
+                  },
+                  {
+                    "id": "kf00110",
+                    "position": 5.3999999999999995,
+                    "connectedRight": false,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 1
+                  }
+                ]
+              },
+              "t055_jitter_text_1_scale": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "jitter-text-1 / scale",
+                "keyframes": [
+                  {
+                    "id": "kf00111",
+                    "position": 4.8,
+                    "connectedRight": true,
+                    "handles": [
+                      0.34,
+                      1.56,
+                      0.36,
+                      1
+                    ],
+                    "type": "bezier",
+                    "value": 0.9
+                  },
+                  {
+                    "id": "kf00112",
+                    "position": 5.3999999999999995,
+                    "connectedRight": false,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 1
+                  }
+                ]
+              }
+            },
+            "trackIdByPropPath": {
+              "opacity": "t054_jitter_text_1_opacity",
+              "scale": "t055_jitter_text_1_scale"
+            }
+          },
+          "jitter-text-2": {
+            "trackData": {
+              "t056_jitter_text_2_opacity": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "jitter-text-2 / opacity",
+                "keyframes": [
+                  {
+                    "id": "kf00113",
+                    "position": 5,
+                    "connectedRight": true,
+                    "handles": [
+                      0.34,
+                      1.56,
+                      0.36,
+                      1
+                    ],
+                    "type": "bezier",
+                    "value": 0
+                  },
+                  {
+                    "id": "kf00114",
+                    "position": 5.6,
+                    "connectedRight": false,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 1
+                  }
+                ]
+              },
+              "t057_jitter_text_2_scale": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "jitter-text-2 / scale",
+                "keyframes": [
+                  {
+                    "id": "kf00115",
+                    "position": 5,
+                    "connectedRight": true,
+                    "handles": [
+                      0.34,
+                      1.56,
+                      0.36,
+                      1
+                    ],
+                    "type": "bezier",
+                    "value": 0.9
+                  },
+                  {
+                    "id": "kf00116",
+                    "position": 5.6,
+                    "connectedRight": false,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 1
+                  }
+                ]
+              }
+            },
+            "trackIdByPropPath": {
+              "opacity": "t056_jitter_text_2_opacity",
+              "scale": "t057_jitter_text_2_scale"
+            }
+          },
+          "jitter-text-3": {
+            "trackData": {
+              "t058_jitter_text_3_opacity": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "jitter-text-3 / opacity",
+                "keyframes": [
+                  {
+                    "id": "kf00117",
+                    "position": 5.2,
+                    "connectedRight": true,
+                    "handles": [
+                      0.34,
+                      1.56,
+                      0.36,
+                      1
+                    ],
+                    "type": "bezier",
+                    "value": 0
+                  },
+                  {
+                    "id": "kf00118",
+                    "position": 5.8,
+                    "connectedRight": false,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 1
+                  }
+                ]
+              },
+              "t059_jitter_text_3_scale": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "jitter-text-3 / scale",
+                "keyframes": [
+                  {
+                    "id": "kf00119",
+                    "position": 5.2,
+                    "connectedRight": true,
+                    "handles": [
+                      0.34,
+                      1.56,
+                      0.36,
+                      1
+                    ],
+                    "type": "bezier",
+                    "value": 0.9
+                  },
+                  {
+                    "id": "kf00120",
+                    "position": 5.8,
+                    "connectedRight": false,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 1
+                  }
+                ]
+              }
+            },
+            "trackIdByPropPath": {
+              "opacity": "t058_jitter_text_3_opacity",
+              "scale": "t059_jitter_text_3_scale"
+            }
+          },
+          "welcome-header": {
+            "trackData": {
+              "t060_welcome_header_opacity": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "welcome-header / opacity",
+                "keyframes": [
+                  {
+                    "id": "kf00121",
+                    "position": 0,
+                    "connectedRight": false,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 1
+                  }
+                ]
+              },
+              "t061_welcome_header_scale": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "welcome-header / scale",
+                "keyframes": [
+                  {
+                    "id": "kf00122",
+                    "position": 0,
+                    "connectedRight": false,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 1
+                  }
+                ]
+              }
+            },
+            "trackIdByPropPath": {
+              "opacity": "t060_welcome_header_opacity",
+              "scale": "t061_welcome_header_scale"
+            }
+          }
+        }
+      }
+    }
+  }
+}

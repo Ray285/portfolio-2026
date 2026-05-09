@@ -39,6 +39,22 @@ export function DeskLoadIntro() {
 
   const restCamera = useMemo(() => getBundledRestCameraForIntro(scene), [scene]);
 
+  const startCameraX = useMemo(() => {
+    if (intro == null || intro.mode !== "zoomOutFromItem") {
+      return restCamera.x;
+    }
+    const item = getFocusItemLayoutForZoomOutIntroSync(scene);
+    return item?.position[0] ?? restCamera.x;
+  }, [intro, scene, restCamera.x]);
+
+  const startCameraZ = useMemo(() => {
+    if (intro == null || intro.mode !== "zoomOutFromItem") {
+      return restCamera.z;
+    }
+    const item = getFocusItemLayoutForZoomOutIntroSync(scene);
+    return intro.from?.z ?? item?.position[2] ?? restCamera.z;
+  }, [intro, scene, restCamera.z]);
+
   const zoomFocusLayoutKey = useMemo(() => {
     if (intro == null || intro.mode !== "zoomOutFromItem") {
       return null;
@@ -57,6 +73,8 @@ export function DeskLoadIntro() {
       scene,
       setCam,
       restCamera,
+      startCameraX,
+      startCameraZ,
       setIntroActive,
       setCameraAnimationComplete,
       getStaggerTarget,

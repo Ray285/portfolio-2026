@@ -13,7 +13,6 @@ import {
 import { type ThreeEvent } from "@react-three/fiber";
 import {
   type Object3D,
-  Box3,
   Group,
   OrthographicCamera,
   Plane,
@@ -22,10 +21,10 @@ import {
   Raycaster,
   DoubleSide,
 } from "three";
-import { IntroStaggerFromOpacityContext } from "@/context/IntroStaggerFromOpacityContext";
 import { useDeskLayout } from "@/context/DeskLayoutContext";
 import { useDeskControls } from "@/context/DeskControlsContext";
 import { useDeskPhysics, type DeskPhysicsEntry } from "./DeskPhysicsContext";
+import { DeskIntroShell } from "./DeskIntroShell";
 import { DeskItemRotateRing } from "./DeskItemRotateRing";
 import {
   computeVisibleDeskBounds,
@@ -34,18 +33,7 @@ import {
 import { navigateToHref } from "@/lib/navigate-href";
 import { worldGroundPixelsPerUnit } from "@/lib/ortho-ground-screen-scale";
 import { capturedPointers } from "@/lib/touch-capture-registry";
-import { useDeskSceneId } from "@/context/DeskSceneContext";
-import { useItemIntroTime } from "@/context/DeskItemIntroContext";
-import { useStaggerGsapOptional } from "@/context/StaggerGsapContext";
 import { RigidBody, BallCollider, type RapierRigidBody } from "@react-three/rapier";
-import {
-  getDeskIntroFocusItemId,
-  getDeskIntroStaggerAfterCamera,
-  getHomePropIntroSpec,
-} from "@/lib/desk-intro-timelines";
-import { getBundledDataForScene } from "@/lib/desk-default-layout";
-import { getEasing } from "@/lib/easing";
-import { setObject3DTreeOpacity } from "@/lib/three-object-opacity";
 import {
   DESK_BALL_CREST_Y,
   DESK_BALL_ENTRY_ID,
@@ -178,33 +166,6 @@ const DEFAULT_PHYSICS = {
 } as const;
 const scratchPush = new Vector3();
 const scratchFocus = new Vector3();
-const scratchDeskIntroPivotCenter = new Vector3();
-
-function measureDeskIntroScalePivot(outerShell: Group, pivot: Group): boolean {
-  const content = pivot.children[0];
-  if (content == null) {
-    return false;
-  }
-  outerShell.updateWorldMatrix(true, false);
-  content.updateWorldMatrix(true, true);
-  const box = new Box3().setFromObject(content);
-  if (box.isEmpty()) {
-    return false;
-  }
-  box.getCenter(scratchDeskIntroPivotCenter);
-  outerShell.worldToLocal(scratchDeskIntroPivotCenter);
-  pivot.position.set(
-    -scratchDeskIntroPivotCenter.x,
-    -scratchDeskIntroPivotCenter.y,
-    -scratchDeskIntroPivotCenter.z,
-  );
-  return true;
-}
-
-function legacyDeskIntroLerp(a: number, b: number, t: number) {
-  return a + (b - a) * t;
-}
-
 export function DraggableObject({
   children,
   layoutId,
@@ -240,34 +201,6 @@ export function DraggableObject({
     primarySelectionId === layoutId &&
     selectedLayoutIds.includes(layoutId);
   const deskPhysics = useDeskPhysics();
-  const scene = useDeskSceneId();
-  const staggerAfterCam = getDeskIntroStaggerAfterCamera(scene);
-  const deskIntroFocusItemId = getDeskIntroFocusItemId(scene);
-  const useDeskLoadIntroStagger =
-    staggerAfterCam != null &&
-    deskIntroFocusItemId != null;
-
-  const bundledSceneData = getBundledDataForScene(scene);
-  const legacyBundledIntro = bundledSceneData.itemIntros[layoutId];
-  const legacyIntroTimeCtx = useItemIntroTime();
-  const staggerGsapOptional = useStaggerGsapOptional();
-
-  const homePropIntroSpecForDesk = getHomePropIntroSpec(layoutId);
-  const scalePivotAnchorMode =
-    homePropIntroSpecForDesk.introScaleAnchor ?? "none";
-  const manualScalePivot = homePropIntroSpecForDesk.scalePivot;
-  const needsDeskIntroScalePivot =
-    useDeskLoadIntroStagger &&
-    (scalePivotAnchorMode === "boundsCenter" ||
-      scalePivotAnchorMode === "manual");
-
-  const deskIntroTweenRootRef = useRef<Group>(null);
-  /** Rapier rigid body for `"kinematic"` mode. `"dynamic"` uses {@link rapierBodyRef}. */
-  const rapierKinematicBodyRef = useRef<RapierRigidBody>(null);
-  const deskIntroScalePivotRef = useRef<Group>(null);
-  const deskIntroBoundsMeasureShellRef = useRef<Group>(null);
-  const legacyDeskIntroOuterRef = useRef<Group>(null);
-
   const clickAwayNdc = useMemo(() => new Vector2(), []);
   const clickAwayRaycaster = useMemo(() => new Raycaster(), []);
   /**
@@ -295,7 +228,9 @@ export function DraggableObject({
   const intersection = useMemo(() => new Vector3(), []);
   const offset = useRef(new Vector3());
   const groupRef = useRef<Group>(null);
-  /** Rapier rigid body for `"dynamic"` mode. `"kinematic"` uses its own ref (set below). */
+  /** Rapier rigid body for `"kinematic"` mode. `"dynamic"` uses {@link rapierBodyRef}. */
+  const rapierKinematicBodyRef = useRef<RapierRigidBody>(null);
+  /** Rapier rigid body for `"dynamic"` mode. */
   const rapierBodyRef = useRef<RapierRigidBody>(null);
   const liftRef = useRef(0);
   const basePositionRef = useRef(new Vector3(px, py, pz));
@@ -467,126 +402,6 @@ export function DraggableObject({
       },
     });
   }, [layoutId, config.radius]);
-
-  useLayoutEffect(() => {
-    if (
-      !useDeskLoadIntroStagger ||
-      staggerGsapOptional == null ||
-      staggerAfterCam == null
-    ) {
-      return;
-    }
-    const tgt = deskIntroTweenRootRef.current;
-    if (tgt == null) {
-      return;
-    }
-    // Skip opacity zeroing for the hero focus item — it starts fully visible
-    // and the camera zoom itself reveals it (desk-intro-imperative sets HERO_FROM_OPACITY).
-    if (staggerAfterCam.from.opacity != null && layoutId !== deskIntroFocusItemId) {
-      setObject3DTreeOpacity(tgt, staggerAfterCam.from.opacity);
-    }
-    staggerGsapOptional.registerStaggerTarget(layoutId, tgt);
-    return () => {
-      staggerGsapOptional.unregisterStaggerTarget(layoutId);
-    };
-  }, [
-    useDeskLoadIntroStagger,
-    staggerGsapOptional,
-    staggerAfterCam,
-    layoutId,
-    deskIntroFocusItemId,
-  ]);
-
-  useLayoutEffect(() => {
-    if (!useDeskLoadIntroStagger || !needsDeskIntroScalePivot) {
-      return;
-    }
-    const shell = deskIntroBoundsMeasureShellRef.current;
-    const pivot = deskIntroScalePivotRef.current;
-    if (shell == null || pivot == null) {
-      return;
-    }
-
-    if (scalePivotAnchorMode === "manual") {
-      if (manualScalePivot != null) {
-        pivot.position.set(
-          -manualScalePivot[0],
-          -manualScalePivot[1],
-          -manualScalePivot[2],
-        );
-      }
-      return;
-    }
-
-    if (scalePivotAnchorMode !== "boundsCenter") {
-      return;
-    }
-
-    let cancelled = false;
-    function measure() {
-      if (cancelled) {
-        return;
-      }
-      const sh = deskIntroBoundsMeasureShellRef.current;
-      const pv = deskIntroScalePivotRef.current;
-      if (sh == null || pv == null || sh.parent == null) {
-        return;
-      }
-      measureDeskIntroScalePivot(sh, pv);
-    }
-    measure();
-    const raf1 = requestAnimationFrame(measure);
-    const raf2 = requestAnimationFrame(() => measure());
-    const t1 = window.setTimeout(measure, 90);
-    const t2 = window.setTimeout(measure, 380);
-
-    return () => {
-      cancelled = true;
-      cancelAnimationFrame(raf1);
-      cancelAnimationFrame(raf2);
-      window.clearTimeout(t1);
-      window.clearTimeout(t2);
-    };
-  }, [
-    useDeskLoadIntroStagger,
-    layoutId,
-    needsDeskIntroScalePivot,
-    scalePivotAnchorMode,
-    manualScalePivot,
-  ]);
-
-  useFrame(() => {
-    if (useDeskLoadIntroStagger || legacyBundledIntro == null) {
-      return;
-    }
-    const g = legacyDeskIntroOuterRef.current;
-    if (g == null) {
-      return;
-    }
-    if (legacyIntroTimeCtx == null) {
-      g.position.set(0, 0, 0);
-      g.scale.set(1, 1, 1);
-      return;
-    }
-    const t = legacyIntroTimeCtx.timeSec.current;
-    const t0 = legacyBundledIntro.delayMs / 1000;
-    const t1 = t0 + legacyBundledIntro.durationMs / 1000;
-    let p = 0;
-    if (t <= t0) {
-      p = 0;
-    } else if (t >= t1) {
-      p = 1;
-    } else {
-      p = (t - t0) / (t1 - t0);
-    }
-    p = getEasing(legacyBundledIntro.easing)(p);
-    const fy = legacyBundledIntro.from.y ?? 0;
-    g.position.set(0, (1 - p) * fy, 0);
-    const fScale = legacyBundledIntro.from.scale;
-    const sc =
-      fScale !== undefined ? legacyDeskIntroLerp(fScale, 1, p) : 1;
-    g.scale.set(sc, sc, sc);
-  });
 
   /** Negative priority runs before default useFrames (e.g. ContactShadows depth) so the scene matches this frame. */
   useFrame(({ camera }, delta) => {
@@ -1100,45 +915,33 @@ export function DraggableObject({
     zoomedByDoubleClickRef.current = !zoomedByDoubleClickRef.current;
   }
 
-  const staggerSceneOpacity =
-    useDeskLoadIntroStagger && staggerAfterCam?.from.opacity != null
-      ? (layoutId === deskIntroFocusItemId ? 1 : staggerAfterCam.from.opacity)
-      : null;
-
-  function wrapDeskIntroSceneOpacity(inner: ReactNode) {
-    if (staggerSceneOpacity == null) {
-      return inner;
-    }
-    return (
-      <IntroStaggerFromOpacityContext.Provider value={staggerSceneOpacity}>
-        {inner}
-      </IntroStaggerFromOpacityContext.Provider>
-    );
-  }
-
-  useFrame(() => {
-    if (
-      !useDeskLoadIntroStagger ||
-      staggerSceneOpacity == null ||
-      staggerGsapOptional == null
-    ) {
-      return;
-    }
-    if (staggerGsapOptional.isStaggerItemAnimated(layoutId)) {
-      return;
-    }
-    const root = deskIntroTweenRootRef.current;
-    if (root != null) {
-      setObject3DTreeOpacity(root, staggerSceneOpacity);
-    }
-  });
-
   const marqueeFootprintRadius =
     config.radius * layoutScale * MARQUEE_PICK_RADIUS_SCALE;
   const marqueeRingInnerMul = primarySelectionId === layoutId ? 0.935 : isArrangeSelected ? 0.93 : 0.925;
 
-  const deskMarqueeAndChildren = (
-    <>
+  const physicsDragSurface = (
+    <group
+      ref={groupRef}
+      userData={{ deskLayoutItem: layoutId }}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerUp}
+      onDoubleClick={handleDoubleClick}
+      onPointerOver={(event) => {
+        event.stopPropagation();
+        hoveredRef.current = true;
+        if (!pointerDownRef.current) {
+          document.body.style.cursor = "grab";
+        }
+      }}
+      onPointerOut={() => {
+        hoveredRef.current = false;
+        if (!pointerDownRef.current) {
+          document.body.style.cursor = "auto";
+        }
+      }}
+    >
       {arrangeMode ? (
         <mesh
           rotation={[-Math.PI / 2, 0, 0]}
@@ -1170,7 +973,9 @@ export function DraggableObject({
           />
         </mesh>
       ) : null}
-      {children}
+      <DeskIntroShell layoutId={layoutId}>
+        {children}
+      </DeskIntroShell>
       {arrangeMode && showArrangeRotateRing ? (
         <DeskItemRotateRing
           outerRadius={config.radius * layoutScale}
@@ -1180,45 +985,12 @@ export function DraggableObject({
           onPointerCancel={handleRingPointerUp}
         />
       ) : null}
-    </>
-  );
-
-  const physicsDragSurface = (
-    <group
-      ref={groupRef}
-      userData={{ deskLayoutItem: layoutId }}
-      onPointerDown={handlePointerDown}
-      onPointerMove={handlePointerMove}
-      onPointerUp={handlePointerUp}
-      onPointerCancel={handlePointerUp}
-      onDoubleClick={handleDoubleClick}
-      onPointerOver={(event) => {
-        event.stopPropagation();
-        hoveredRef.current = true;
-        if (!pointerDownRef.current) {
-          document.body.style.cursor = "grab";
-        }
-      }}
-      onPointerOut={() => {
-        hoveredRef.current = false;
-        if (!pointerDownRef.current) {
-          document.body.style.cursor = "auto";
-        }
-      }}
-    >
-      {useDeskLoadIntroStagger ? (
-        <group ref={deskIntroTweenRootRef}>{deskMarqueeAndChildren}</group>
-      ) : (
-        deskMarqueeAndChildren
-      )}
     </group>
   );
 
-  let renderedDeskItem: ReactNode = physicsDragSurface;
-
   /** Wrap with Rapier body for `"kinematic"` / `"dynamic"` modes. */
   if (rapierMode === "kinematic") {
-    renderedDeskItem = (
+    return (
       <RigidBody
         ref={rapierKinematicBodyRef}
         type="kinematicPosition"
@@ -1230,7 +1002,7 @@ export function DraggableObject({
       </RigidBody>
     );
   } else if (rapierMode === "dynamic") {
-    renderedDeskItem = (
+    return (
       <RigidBody
         ref={rapierBodyRef}
         type="dynamic"
@@ -1247,23 +1019,5 @@ export function DraggableObject({
     );
   }
 
-  if (useDeskLoadIntroStagger && needsDeskIntroScalePivot) {
-    renderedDeskItem = (
-      <group ref={deskIntroBoundsMeasureShellRef}>
-        <group ref={deskIntroScalePivotRef}>
-          {wrapDeskIntroSceneOpacity(renderedDeskItem)}
-        </group>
-      </group>
-    );
-  } else if (useDeskLoadIntroStagger && staggerSceneOpacity != null) {
-    renderedDeskItem = wrapDeskIntroSceneOpacity(renderedDeskItem);
-  }
-
-  if (!useDeskLoadIntroStagger && legacyBundledIntro != null) {
-    renderedDeskItem = (
-      <group ref={legacyDeskIntroOuterRef}>{renderedDeskItem}</group>
-    );
-  }
-
-  return renderedDeskItem;
+  return physicsDragSurface;
 }

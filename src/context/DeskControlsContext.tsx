@@ -168,7 +168,7 @@ export function DeskControlsProvider({ children }: { children: ReactNode }) {
   );
 
   useEffect(() => {
-    fetch("/desk-scene-config-v1.json")
+    fetch("/desk-scene-config.json")
       .then((r) => (r.ok ? r.json() : null))
       .catch(() => null)
       .then((data: unknown) => {

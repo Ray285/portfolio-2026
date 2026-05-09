@@ -6,7 +6,7 @@ import { Environment, OrthographicCamera, Text } from "@react-three/drei";
 import { CuboidCollider, Physics, RigidBody } from "@react-three/rapier";
 import { ContactShadows } from "./ContactShadows";
 import { DeskAnimatedTextureDriver } from "./DeskAnimatedTextureDriver";
-import { DirectionalLight, Group, MeshBasicMaterial, PCFShadowMap, type WebGLRenderer } from "three";
+import { DirectionalLight, MeshBasicMaterial, PCFShadowMap, type WebGLRenderer } from "three";
 import { useDeskSceneId } from "@/context/DeskSceneContext";
 import { useDeskControls } from "@/context/DeskControlsContext";
 import { useDeskIntroOptional } from "@/context/DeskIntroContext";
@@ -26,9 +26,10 @@ import {
 import { PolaroidPhoto } from "./PolaroidPhoto";
 import { PortfolioCard3D } from "./PortfolioCard3D";
 import { ItemIntroTimeProvider } from "@/context/DeskItemIntroContext";
-import { StaggerGsapProvider, useStaggerGsapOptional } from "@/context/StaggerGsapContext";
+import { StaggerGsapProvider } from "@/context/StaggerGsapContext";
 import { useDeskLayout } from "@/context/DeskLayoutContext";
 import { DeskLoadIntro } from "./DeskLoadIntro";
+import { TheatreStudioInit } from "./TheatreStudioInit";
 import { deskItemId, type DeskItemLayout } from "@/lib/desk-layout";
 import { getDeskIntroStaggerAfterCamera } from "@/lib/desk-intro-timelines";
 import {
@@ -42,8 +43,6 @@ import {
   polaroidManifestItemImageUrl,
 } from "@/lib/polaroid-manifest";
 import { HANDWRITING_FONT_URL } from "@/lib/desk-handwriting-font";
-import { setObject3DTreeOpacity } from "@/lib/three-object-opacity";
-import { WELCOME_HEADER_STAGGER_ID } from "@/lib/desk-intro-timelines/desk-intro-imperative";
 import { DEFAULT_CAMERA } from "@/lib/desk-scene-defaults";
 import { DESK_SCENE_ABOUT, DESK_SCENE_HOME } from "@/lib/desk-scene-id";
 
@@ -504,13 +503,11 @@ interface WelcomeTextItem {
 
 /** Default single-line text for the welcome header. */
 const DEFAULT_WELCOME_TEXTS: WelcomeTextItem[] = [
-  { text: "Hey, I'm Ray", position: [0, 0.04, 0.65], fontSize: 0.44, maxWidth: 14 },
+  { text: "Hey, I'm Ray", position: [0, 0, 0], fontSize: 0.44, maxWidth: 14 },
 ];
 
-/** Large static header on the desk; uses WOFF/OTF from `public/fonts/`. Registers with the intro stagger. */
+/** Large static header on the desk; uses WOFF/OTF from `public/fonts/`. Registration handled by DeskIntroShell via DraggableObject. */
 function WelcomeHeader({ texts = DEFAULT_WELCOME_TEXTS }: { texts?: WelcomeTextItem[] }) {
-  const groupRef = useRef<Group>(null);
-  const stagger = useStaggerGsapOptional();
   const jitterUniformRef = useRef<{ value: number } | null>(null);
 
   const jitterMaterial = useMemo(() => {
@@ -533,16 +530,6 @@ transformed.y += cos(charBin * 311.7  + frame * 47.124) * 0.009;`,
     return mat;
   }, []);
 
-  useLayoutEffect(() => {
-    const g = groupRef.current;
-    if (!g || !stagger) return;
-    setObject3DTreeOpacity(g, 0);
-    stagger.registerStaggerTarget(WELCOME_HEADER_STAGGER_ID, g);
-    return () => {
-      stagger.unregisterStaggerTarget(WELCOME_HEADER_STAGGER_ID);
-    };
-  }, [stagger]);
-
   useFrame((_, delta) => {
     if (jitterUniformRef.current) {
       jitterUniformRef.current.value += delta;
@@ -550,7 +537,7 @@ transformed.y += cos(charBin * 311.7  + frame * 47.124) * 0.009;`,
   });
 
   return (
-    <group ref={groupRef}>
+    <group>
       {texts.map((item, i) => (
         <Text
           key={i}
@@ -768,6 +755,25 @@ function DeskObjects() {
         );
       })}
 
+      {scene === DESK_SCENE_HOME && (() => {
+        const layoutId = deskItemId.welcomeHeader;
+        const whl = getItem(layoutId, { position: [0, 0.04, 0.65] as [number, number, number], rotation: [0, 0, 0] as [number, number, number] });
+        return (
+          <Suspense key={layoutId} fallback={null}>
+            <DraggableObject
+              layoutId={layoutId}
+              position={whl.position}
+              rotation={whl.rotation}
+              layoutScale={whl.scale ?? 1}
+              physics={HANDWRITING_LABEL_PHYSICS}
+              rapierMode="none"
+            >
+              <WelcomeHeader />
+            </DraggableObject>
+          </Suspense>
+        );
+      })()}
+
       {scene === DESK_SCENE_HOME && JITTER_DESK_TEXTS.map((item, index) => {
         const layoutId = deskItemId.jitterText(index);
         const hl = getItem(
@@ -807,18 +813,6 @@ function DeskObjects() {
   );
 }
 
-function WelcomeHeaderGate() {
-  const scene = useDeskSceneId();
-  if (scene === DESK_SCENE_ABOUT) {
-    return null;
-  }
-  return (
-    <Suspense fallback={null}>
-      <WelcomeHeader />
-    </Suspense>
-  );
-}
-
 export default function DeskScene() {
   const [marqueeOverlay, setMarqueeOverlay] = useState<DeskMarqueeOverlayRect | null>(
     null,
@@ -849,6 +843,7 @@ export default function DeskScene() {
       >
         <color attach="background" args={["#ffffff"]} />
         <ToneMappingSync />
+        <TheatreStudioInit />
         <StaggerGsapProvider>
           <ItemIntroTimeProvider>
             <DeskLoadIntro />
@@ -857,7 +852,6 @@ export default function DeskScene() {
           <ResponsiveCamera />
           <SceneLights />
           <DeskSurface />
-          <WelcomeHeaderGate />
           <Physics gravity={[0, -30, 0]} timeStep="vary">
             {/* Desk surface collider — matches DeskSurface planeGeometry at y=-0.04 */}
             <RigidBody type="fixed" position={[0, -0.03, 0]}>

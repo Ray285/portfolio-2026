@@ -54,6 +54,7 @@ export const HOME_DESK_INTRO_ZOOM_OUT: DeskIntroZoomOutFromItem = {
   easingGsap: "power2.inOut",
   from: {
     y: 2.2,
+    z: -1.3,
     zoom: 1.65,
   },
 };

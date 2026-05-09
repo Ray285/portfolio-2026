@@ -122,6 +122,7 @@ export type DeskCameraState = {
 
 export type DeskIntroFromOverride = {
   y?: number;
+  z?: number;
   zoom?: number;
 };
 
@@ -563,6 +564,8 @@ export const deskItemId = {
   iphone: "iphone",
   /** Home desk loop video (`output.webm`). */
   homeDeskVideo: "home-desk-video",
+  /** Home desk welcome header — draggable in arrange mode. */
+  welcomeHeader: "welcome-header",
   /** Draggable desk copy from `DESK_TEXT_OVERLAYS` — id → `desk-text-${id}` */
   deskText: deskTextLayoutId,
   /** Draggable jitter-text elements — same shader as welcome header */

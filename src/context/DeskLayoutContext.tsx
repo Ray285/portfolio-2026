@@ -93,7 +93,7 @@ export function DeskLayoutProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (scene !== DESK_SCENE_HOME) return;
     if (hasDeskLayoutInStorageForKey(storageKey)) return;
-    fetch("/desk-layout-v1.json")
+    fetch("/desk-layout.json")
       .then((r) => (r.ok ? r.json() : null))
       .catch(() => null)
       .then((data: unknown) => {

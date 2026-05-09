@@ -19,6 +19,9 @@ export type DeskIntroTimelineAppendContext = {
   setCam: (c: DeskIntroCamProxy) => void;
   /** Rest orthographic pose from bundled layout (`desk-layout*.json` `camera`). */
   restCamera: DeskCameraState;
+  /** Camera pose to use for X/Z during intro (centered on focus item). */
+  startCameraX: number;
+  startCameraZ: number;
   setIntroActive: (v: boolean) => void;
   setCameraAnimationComplete: (v: boolean) => void;
   /** Look up a registered stagger target by id (for late-bound animations during the hold phase). */

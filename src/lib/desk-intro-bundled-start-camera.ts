@@ -81,8 +81,8 @@ export function getZoomOutIntroStartCameraForInitialControls(
     return null;
   }
   return buildZoomOutStartAndEndFromFocus(
-    rest.x,
-    rest.z,
+    item.position[0],
+    item.position[2],
     rest,
     intro,
   ).start;
@@ -91,17 +91,18 @@ export function getZoomOutIntroStartCameraForInitialControls(
 type Cam4 = { x: number; y: number; z: number; zoom: number };
 
 export function buildZoomOutStartAndEndFromFocus(
-  _focusX: number,
-  _focusZ: number,
+  focusX: number,
+  focusZ: number,
   rest: DeskCameraState,
   intro: DeskIntroZoomOutFromItem,
 ): { start: Cam4; end: Cam4 } {
   const fromY = intro.from?.y ?? Math.min(rest.y * 0.52, 4.5);
+  const fromZ = intro.from?.z ?? focusZ;
   /** Higher than `rest.zoom` = ortho starts tighter (closer) on the focus item. */
   const fromZoom = intro.from?.zoom ?? rest.zoom * 1.14;
   return {
-    start: { x: rest.x, y: fromY, z: rest.z, zoom: fromZoom },
-    end: { x: rest.x, y: rest.y, z: rest.z, zoom: rest.zoom },
+    start: { x: focusX, y: fromY, z: fromZ, zoom: fromZoom },
+    end: { x: focusX, y: rest.y, z: focusZ, zoom: rest.zoom },
   };
 }
 
